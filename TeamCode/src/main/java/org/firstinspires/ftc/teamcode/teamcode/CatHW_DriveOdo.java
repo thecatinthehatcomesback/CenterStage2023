@@ -151,7 +151,7 @@ public class CatHW_DriveOdo extends CatHW_Subsystem
         rightRearMotor.setDirection(DcMotor.Direction.FORWARD);
 
         realSense = new CatHW_RealSense(mainHW);
-        realSense.init();
+        //realSense.init();
         motionProfile = new CatMotionProfile();
         // Define motor zero power behavior: //
         setDriveToBrake();

@@ -107,13 +107,13 @@ public class MainTeleOp extends LinearOpMode
             // Driver 1 Controls:
             //--------------------------------------------------------------------------------------
 
-            if((elapsedGameTime.time() >= 80) && (elapsedGameTime.time() <= 82)){
+            /*if((elapsedGameTime.time() >= 80) && (elapsedGameTime.time() <= 82)){
                 gamepad1.rumble(100);
                 gamepad2.rumble(100);
             }else if(elapsedGameTime.time() >= 90 && (elapsedGameTime.time() <= 92)){
                 gamepad1.rumble(100);
                 gamepad2.rumble(100);
-            }
+            }*/
 
             if(elapsedGameTime.time() > 90 && CatHW_Async.isRedAlliance && !endGame){
                 robot.lights.blink(15, RevBlinkinLedDriver.BlinkinPattern.RED,1000 );
