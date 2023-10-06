@@ -21,6 +21,7 @@
 
 package org.firstinspires.ftc.teamcode.teamcode;
 
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -42,8 +43,9 @@ import org.openftc.easyopencv.OpenCvPipeline;
 @TeleOp
 public class EasyOpenCVExample extends LinearOpMode
 {
+    static RobotConstants pos = new RobotConstants();
     //OpenCvInternalCamera phoneCam;
-    SkystoneDeterminationPipeline pipeline;
+    CenterstageDeterminationPipeline pipeline;
     OpenCvCamera webcam;
 
     @Override
@@ -53,7 +55,7 @@ public class EasyOpenCVExample extends LinearOpMode
 
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
-        pipeline = new SkystoneDeterminationPipeline();
+        pipeline = new CenterstageDeterminationPipeline();
         webcam.setPipeline(pipeline);
 
 
@@ -86,19 +88,15 @@ public class EasyOpenCVExample extends LinearOpMode
 
         while (opModeIsActive())
         {
-            telemetry.addData("Analysis Right", pipeline.avg1RedGetAnalysis());
-            telemetry.addData("Analysis Middle", pipeline.avg2BlueAnalysis());
-            telemetry.addData("Analysis Left", pipeline.avg3GreenAnalysis());
-            telemetry.addData("Analysis","Top Left: %d Top Right: %d", pipeline.getTopLeftAvg(),pipeline.getTopRightAvg());
+            telemetry.addData("Analysis Right", pipeline.avgRightGetAnalysis());
+            telemetry.addData("Analysis Middle", pipeline.avgMiddleGetAnalysis());
+            telemetry.addData("Analysis Left", pipeline.avgLeftGetAnalysis());
 
 
 
             telemetry.addData("Position", pipeline.position);
             telemetry.update();
-            dashboardTelemetry.addData("Analysis Red", pipeline.avg1RedGetAnalysis());
-            dashboardTelemetry.addData("Analysis Blue", pipeline.avgBlue);
-            dashboardTelemetry.addData("Analysis Green", pipeline.avgGreen);
-            dashboardTelemetry.addData("Analysis","Top Left: %d Top Right: %d", pipeline.getTopLeftAvg(),pipeline.getTopRightAvg());
+            dashboardTelemetry.addData("Analysis Red", pipeline.avgRightGetAnalysis());
             dashboardTelemetry.addData("robot pos", pipeline.robotPosition);
             dashboardTelemetry.addData("Position", pipeline.position);
             dashboardTelemetry.update();
@@ -109,8 +107,9 @@ public class EasyOpenCVExample extends LinearOpMode
     }
 
     @Config
-    public static class SkystoneDeterminationPipeline extends OpenCvPipeline
+    public static class CenterstageDeterminationPipeline extends OpenCvPipeline
     {
+
         public static int regionWidth = 60;
         public static int regionHeight = 60;
 
@@ -139,51 +138,52 @@ public class EasyOpenCVExample extends LinearOpMode
         /*
          * The core values which define the location and size of the sample regions
          */
-        static final Point REGION1_TOPLEFT_ANCHOR_POINT = new Point(100,100);
+
+        //TODO: change point cordinates to correct position
+        static final Point RIGHT_REGION_TOPLEFT_ANCHOR_POINT = new Point(RobotConstants.rightRegionx,RobotConstants.rightRegiony);
+        static final Point MIDDLE_REGION_TOPLEFT_ANCHOR_POINT = new Point(RobotConstants.middleRegionx,RobotConstants.middleRegiony);
+        static final Point LEFT_REGION_TOPLEFT_ANCHOR_POINT = new Point(RobotConstants.leftRegionx,RobotConstants.leftRegiony);
 
 
-
-        Point right_region1_pointA = new Point(
-                REGION1_TOPLEFT_ANCHOR_POINT.x,
-                REGION1_TOPLEFT_ANCHOR_POINT.y);
-        Point right_region1_pointB = new Point(
-                REGION1_TOPLEFT_ANCHOR_POINT.x + regionWidth,
-                REGION1_TOPLEFT_ANCHOR_POINT.y + regionHeight);
-
+        Point right_region_pointA = new Point(
+                RIGHT_REGION_TOPLEFT_ANCHOR_POINT.x,
+                RIGHT_REGION_TOPLEFT_ANCHOR_POINT.y);
+        Point right_region_pointB = new Point(
+                RIGHT_REGION_TOPLEFT_ANCHOR_POINT.x + RobotConstants.rightRegionWidth,
+                RIGHT_REGION_TOPLEFT_ANCHOR_POINT.y + RobotConstants.rightRegionHeight);
+        Point middle_region_pointA = new Point(
+                MIDDLE_REGION_TOPLEFT_ANCHOR_POINT.x,
+                MIDDLE_REGION_TOPLEFT_ANCHOR_POINT.y);
+        Point middle_region_pointB = new Point(
+                MIDDLE_REGION_TOPLEFT_ANCHOR_POINT.x + RobotConstants.middleRegionWidth,
+                MIDDLE_REGION_TOPLEFT_ANCHOR_POINT.y + RobotConstants.middleRegionHeight);
+        Point left_region_pointA = new Point(
+                LEFT_REGION_TOPLEFT_ANCHOR_POINT.x,
+                LEFT_REGION_TOPLEFT_ANCHOR_POINT.y);
+        Point left_region_pointB = new Point(
+                LEFT_REGION_TOPLEFT_ANCHOR_POINT.x + RobotConstants.leftRegionWidth,
+                LEFT_REGION_TOPLEFT_ANCHOR_POINT.y + RobotConstants.leftRegionHeight);
         /*
          * Working variables
          */
-        Mat region1_Cb;
-        Mat region2_Cb;
-        Mat region3_Cb;
+        Mat right_Cb;
+        Mat middle_Cb;
+        Mat left_Cb;
 
 
         Mat YCrCb = new Mat();
         Mat Cr = new Mat();
-        Mat Cr2 = new Mat();
-        Mat Cr3 = new Mat();
 
-        int avgRed;
-        int avgBlue;
-        int avgGreen;
-
-        int topLeftAvg;
-        int topRightAvg;
+        int avgRight;
+        int avgMiddle;
+        int avgLeft;
 
         Mat hsv = new Mat();
-        Mat hsv2 = new Mat();
-        Mat hsv3 = new Mat();
         Scalar redLowHSV1 = new Scalar(0, 100, 20); // lower bound HSV for red
         Scalar redHighHSV1 = new Scalar(10,255,255); // higher bound HSV for red
 
         Scalar redLowHSV2 = new Scalar(160, 100, 20); // lower bound HSV for red
         Scalar redHighHSV2 = new Scalar(179,255,255); // higher bound HSV for red
-
-        Scalar blueLowHSV = new Scalar(100,150,0); // lower bound HSV for blue
-        Scalar blueHighHSV = new Scalar(140,255,255); //higher bound HSV for blue
-
-        Scalar greenLowHSV = new Scalar(36, 25, 25); // lower bound HSV for green
-        Scalar greenHighHSV = new Scalar(70, 255,255); //higher bound HSV for green
 
 
 
@@ -203,11 +203,7 @@ public class EasyOpenCVExample extends LinearOpMode
         void inputToCb(Mat input)
         {
             Imgproc.cvtColor(input, hsv, Imgproc.COLOR_RGB2HSV);
-            Imgproc.cvtColor(input, hsv2, Imgproc.COLOR_RGB2HSV);
-            Imgproc.cvtColor(input, hsv3, Imgproc.COLOR_RGB2HSV);
             Core.extractChannel(hsv, Cr, 0);
-            Core.extractChannel(hsv2, Cr2, 0);
-            Core.extractChannel(hsv3, Cr3, 0);
 
         }
 
@@ -217,16 +213,16 @@ public class EasyOpenCVExample extends LinearOpMode
         public void init(Mat firstFrame)
         {
             inputToCb(firstFrame);
-            region1_Cb = Cr.submat(new Rect(right_region1_pointA, right_region1_pointB));
-            region2_Cb = Cr2.submat(new Rect(right_region1_pointA, right_region1_pointB));
-            region3_Cb = Cr3.submat(new Rect(right_region1_pointA, right_region1_pointB));
+            right_Cb = Cr.submat(new Rect(right_region_pointA, right_region_pointB));
+            middle_Cb = Cr.submat(new Rect(middle_region_pointA, middle_region_pointB));
+            left_Cb = Cr.submat(new Rect(left_region_pointA, left_region_pointB));
         }
 
         @Override
         public Mat processFrame(Mat input)
         {
-            right_region1_pointB.x = REGION1_TOPLEFT_ANCHOR_POINT.x + regionWidth;
-            right_region1_pointB.y = REGION1_TOPLEFT_ANCHOR_POINT.y + regionHeight;
+            right_region_pointB.x = RIGHT_REGION_TOPLEFT_ANCHOR_POINT.x + regionWidth;
+            right_region_pointB.y = RIGHT_REGION_TOPLEFT_ANCHOR_POINT.y + regionHeight;
 
 
             inputToCb(input);
@@ -236,48 +232,51 @@ public class EasyOpenCVExample extends LinearOpMode
 
             Core.inRange(hsv, redLowHSV1, redHighHSV1,Cr);
             Core.inRange(hsv, redLowHSV2, redHighHSV2,Cr);
-            avgRed = (int) Core.mean(region1_Cb).val[0];
+            avgRight  = (int) Core.mean(right_Cb).val[0];
 
-            Core.inRange(hsv,blueLowHSV,blueHighHSV,Cr2);
-            avgBlue = (int) Core.mean(region2_Cb).val[0];
+            avgMiddle = (int) Core.mean(middle_Cb).val[0];
 
-            Core.inRange(hsv,greenLowHSV,greenHighHSV,Cr3);
-            avgGreen = (int) Core.mean(region3_Cb).val[0];
+            avgLeft   = (int) Core.mean(left_Cb).val[0];
 
 
 
 
             Imgproc.rectangle(
                     input, // Buffer to draw on
-                    right_region1_pointA, // First point which defines the rectangle
-                    right_region1_pointB, // Second point which defines the rectangle
+                    right_region_pointA, // First point which defines the rectangle
+                    right_region_pointB, // Second point which defines the rectangle
+                    BLUE, // The color the rectangle is drawn in
+                    2); // Thickness of the rectangle lines
+
+            Imgproc.rectangle(
+                    input, // Buffer to draw on
+                    middle_region_pointA, // First point which defines the rectangle
+                    middle_region_pointB, // Second point which defines the rectangle
+                    BLUE, // The color the rectangle is drawn in
+                    2); // Thickness of the rectangle lines
+
+            Imgproc.rectangle(
+                    input, // Buffer to draw on
+                    left_region_pointA, // First point which defines the rectangle
+                    left_region_pointB, // Second point which defines the rectangle
                     BLUE, // The color the rectangle is drawn in
                     2); // Thickness of the rectangle lines
 
             position = conePosition.NONE; // Record our analysis
-            if(avgRed > avgBlue && avgRed > avgGreen){
+            if(avgRight > avgMiddle && avgRight > avgLeft){
                 position = conePosition.RIGHT;
-            }else if (avgBlue > avgRed && avgBlue > avgGreen){
+            }else if (avgMiddle > avgRight && avgMiddle > avgLeft){
                 position = conePosition.MIDDLE;
-            }else if(avgGreen > avgRed && avgGreen > avgBlue){
+            }else if(avgLeft > avgRight && avgLeft > avgMiddle){
                 position = conePosition.LEFT;
-            }
-
-            robotPosition = robotPos.NONE;
-            if(topLeftAvg > topRightAvg){
-                robotPosition = robotPos.RIGHT;
-            }else if(topRightAvg > topLeftAvg){
-                robotPosition = robotPos.LEFT;
             }
 
             return input;
         }
 
-        public int avg1RedGetAnalysis() {  return avgRed;      }
-        public int avg2BlueAnalysis()   {  return avgBlue;     }
-        public int avg3GreenAnalysis()  {  return avgGreen;    }
-        public int getTopLeftAvg()      {  return topLeftAvg;  }
-        public int getTopRightAvg()     {  return topRightAvg; }
+        public int avgRightGetAnalysis()  {  return avgRight;    }
+        public int avgMiddleGetAnalysis() {  return avgMiddle;     }
+        public int avgLeftGetAnalysis()    {  return avgLeft;    }
 
 
 
