@@ -137,22 +137,20 @@ public class CatHW_DriveOdo extends CatHW_Subsystem
 
 
         // Define and Initialize Motors: //
-        leftFrontMotor = hwMap.dcMotor.get("left_front_motor");
-        rightFrontMotor = hwMap.dcMotor.get("right_front_motor");
-        leftRearMotor = hwMap.dcMotor.get("left_rear_motor");
-        rightRearMotor = hwMap.dcMotor.get("right_rear_motor");
+        leftFrontMotor = hwMap.dcMotor.get("leftFront");
+        rightFrontMotor = hwMap.dcMotor.get("rightFront");
+        leftRearMotor = hwMap.dcMotor.get("leftRear");
+        rightRearMotor = hwMap.dcMotor.get("rightRear");
         //distanceSensor = hwMap.analogInput.get("distance");
 
 
         // Define motor directions: //
-        leftFrontMotor.setDirection(DcMotor.Direction.REVERSE);
+        leftFrontMotor.setDirection(DcMotor.Direction.FORWARD);
         rightFrontMotor.setDirection(DcMotor.Direction.FORWARD);
-        leftRearMotor.setDirection(DcMotor.Direction.FORWARD);
+        leftRearMotor.setDirection(DcMotor.Direction.REVERSE);
         rightRearMotor.setDirection(DcMotor.Direction.FORWARD);
 
-        realSense = new CatHW_RealSense(mainHW);
-        //realSense.init();
-        motionProfile = new CatMotionProfile();
+
         // Define motor zero power behavior: //
         setDriveToBrake();
 

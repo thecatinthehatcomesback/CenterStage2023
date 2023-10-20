@@ -69,17 +69,17 @@ public class CatHW_Async
         myInstance = this;
 
         // Give Telemetry for each system we begin to init:
-        opMode.telemetry.addData("Initialize", "Jaws...");
-        opMode.telemetry.update();
-        jaws = new CatHW_Jaws(this);
-        jaws.init();
+        //opMode.telemetry.addData("Initialize", "Jaws...");
+        //opMode.telemetry.update();
+        //jaws = new CatHW_Jaws(this);
+        //jaws.init();
 
-        opMode.telemetry.addData("Initialize", "Launcher...");
-        opMode.telemetry.update();
+        //opMode.telemetry.addData("Initialize", "Launcher...");
+        //opMode.telemetry.update();
 
-        opMode.telemetry.addData("Initialize", "Lights...");
-        opMode.telemetry.update();
-        lights = CatHW_Lights.getInstanceAndInit(this);
+        //opMode.telemetry.addData("Initialize", "Lights...");
+        //opMode.telemetry.update();
+        //lights = CatHW_Lights.getInstanceAndInit(this);
         //lights.init();
 
         opMode.telemetry.addData("Initialize", "Drive...");
@@ -87,10 +87,10 @@ public class CatHW_Async
         drive = new CatHW_DriveOdo(this);
         drive.init();
 
-        opMode.telemetry.addData("Initialize", "Vision...");
-        opMode.telemetry.update();
-        eyes = new CatHW_Vision(this);
-        eyes.initVision(hwMap);
+       // opMode.telemetry.addData("Initialize", "Vision...");
+       // opMode.telemetry.update();
+        //eyes = new CatHW_Vision(this);
+        //eyes.initVision(hwMap);
 
         opMode.telemetry.addData("Initialize", "All Done...  BOOM!");
         opMode.telemetry.update();
