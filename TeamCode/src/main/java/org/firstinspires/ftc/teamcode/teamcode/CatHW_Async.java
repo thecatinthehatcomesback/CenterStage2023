@@ -40,9 +40,8 @@ public class CatHW_Async
 
     CatHW_Vision eyes = null;
     CatHW_Lights lights = null;
-    CatHW_RealSense T265 = null;
 
-
+    CatHW_Launch launch = null;
 
 
     /* Constructor */
@@ -86,6 +85,9 @@ public class CatHW_Async
         opMode.telemetry.update();
         drive = new CatHW_DriveOdo(this);
         drive.init();
+
+        launch= new CatHW_Launch(this);
+        launch.init();
 
        // opMode.telemetry.addData("Initialize", "Vision...");
        // opMode.telemetry.update();

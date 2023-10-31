@@ -155,6 +155,12 @@ public class MainTeleOp extends LinearOpMode
                 robot.drive.setDrivePowers(leftFront, rightFront, leftBack, rightBack);
             }
 
+            if (gamepad1.x) {
+                robot.launch.launch();
+            } else{
+                robot.launch.arm();
+            }
+
             //--------------------------------------------------------------------------------------
             // Driver 2 Controls:
             //--------------------------------------------------------------------------------------
