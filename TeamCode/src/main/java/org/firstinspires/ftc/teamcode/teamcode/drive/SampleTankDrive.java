@@ -57,6 +57,9 @@ public class SampleTankDrive extends TankDrive {
 
     public static double VX_WEIGHT = 1;
     public static double OMEGA_WEIGHT = 1;
+    public static double kV = DriveConstants.kV;
+    public static double kA = DriveConstants.kA;
+    public static double kStatic = DriveConstants.kStatic;
 
     private TrajectorySequenceRunner trajectorySequenceRunner;
 

@@ -1,12 +1,19 @@
 package org.firstinspires.ftc.teamcode.teamcode;
 
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
+
 import android.util.Log;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.geometry.Vector2d;
+import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.teamcode.teamcode.drive.SampleMecanumDrive;
 
 import java.util.ArrayList;
 
@@ -29,6 +36,7 @@ import java.util.ArrayList;
  */
 public class CatHW_DriveOdo extends CatHW_Subsystem
 {
+    SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
     //----------------------------------------------------------------------------------------------
     // Odometry Module Constants:                               TODO: Are these constants updated???
     //----------------------------------------------------------------------------------------------
@@ -90,8 +98,6 @@ public class CatHW_DriveOdo extends CatHW_Subsystem
 
     static boolean isDone;
 
-    public CatHW_RealSense realSense = null;
-    private CatMotionProfile motionProfile = null;
 
     ElapsedTime runTime = new ElapsedTime();
 
@@ -164,6 +170,9 @@ public class CatHW_DriveOdo extends CatHW_Subsystem
         // Sets enums to a default value: //
         currentMethod = DRIVE_METHOD.TRANSLATE;
         timeout = 0;
+        Pose2d startPose = new Pose2d(0, 0, Math.toRadians(0));
+
+        drive.setPoseEstimate(startPose);
 
     }
 
@@ -229,17 +238,31 @@ public class CatHW_DriveOdo extends CatHW_Subsystem
         targetY = y;
         strafePower = power;
         targetTheta = theta;
+        Pose2d poseEstimate = drive.getPoseEstimate();
+
 
         if (isNonStop){
             //if the last drive was nonstop
             isNonStop = false;
 
-            motionProfile.setNonStopTarget(x, y, power, realSense.getXPos(), realSense.getYPos());
+            Trajectory traj1 = drive.trajectoryBuilder(poseEstimate)
+                    .splineTo(new Vector2d(x, y), Math.toRadians(theta))
+                    .build();
+            drive.followTrajectory(traj1);
         }else {
             //if the last drive was normal
-            motionProfile.setTarget(x, y, power, realSense.getXPos(), realSense.getYPos());
+            Trajectory traj1 = drive.trajectoryBuilder(poseEstimate)
+                    .splineTo(new Vector2d(x, y), Math.toRadians(theta))
+                    .build();
+            drive.followTrajectoryAsync(traj1);
 
         }
+        drive.setWeightedDrivePower(new Pose2d(
+                power,
+                power,
+                power
+        ));
+
 
         // Reset timer once called
         runTime.reset();
@@ -348,10 +371,10 @@ public class CatHW_DriveOdo extends CatHW_Subsystem
         // Power update Thread:
         if (isNonStop) {
             // If the last drive method call was nonstop:
-            motionProfile.setNonStopTarget(points, power, followRadius);
+            //motionProfile.setNonStopTarget(points, power, followRadius);
         } else {
             // If the last drive method call was normal:
-            motionProfile.setTarget(points, power, followRadius);
+            //motionProfile.setTarget(points, power, followRadius);
         }
 
         // Set it so the next one will be nonstop.
@@ -451,369 +474,13 @@ public class CatHW_DriveOdo extends CatHW_Subsystem
 
     }
 
-    public void updateOdo(){
-        while (!realSense.getCameraUpdate()){
-            mainHW.opMode.sleep(1);
-        }
-    }
+
 
 
     //----------------------------------------------------------------------------------------------
     // isDone Method:
     //----------------------------------------------------------------------------------------------
-    @Override
-    public boolean isDone() {
 
-        updateOdo();
-
-        double getPower = motionProfile.updatePower(realSense.getXPos(),realSense.getYPos(), realSense.getRotation());
-
-        boolean keepDriving = true;
-
-
-        // Exit if timeout is hit.  Helpful for when the robot stalls/stalls out.
-        if ((runTime.seconds() > timeout)) {
-            Log.d("catbot", "Timed OUT.");
-            keepDriving = false;
-        }
-
-        switch (currentMethod) {
-            case TURN: {
-                // Current orientation from odometry modules:
-                double zVal = realSense.getRotation();
-
-
-
-                if ((zVal >= (targetTheta - 1.5)) && (clockwiseTurn)) {
-                    keepDriving = false;
-                }
-                if ((zVal <= (targetTheta + 1.5)) && (!clockwiseTurn)) {
-                    keepDriving = false;
-                }
-                double turnPow = -(zVal - targetTheta) / 30.0;
-                double minTP = .2;
-                double turnRate = (zVal  - prevzVal)/(runTime.seconds() - prevSec);
-                prevzVal = zVal;
-                prevSec = runTime.seconds();
-
-                if (Math.abs(turnPow) < minTP) {
-                    if(clockwiseTurn){
-                        turnPow = minTP;
-                    }else{
-                        turnPow = -minTP;
-                    }
-                }
-                if (Math.abs(turnPow) > .9) {
-                    if(clockwiseTurn) {
-                        turnPow = .9;
-                    }else{
-                        turnPow = -.9;
-                    }
-                }
-                turnPow += turnRate * - 0.003;
-                //Log.d("catbot", String.format("turn target %.1f, current %.1f  %s Power %.3f D:%.3f",
-                //      targetTheta, zVal, clockwiseTurn ? "CW" : "CCW", turnPow, turnRate * -0.003));
-                leftFrontMotor.setPower(turnPow);
-                leftRearMotor.setPower(turnPow);
-                rightFrontMotor.setPower(-turnPow);
-                rightRearMotor.setPower(-turnPow);
-
-                break;
-
-            }
-            case PURE_PURSUIT: {
-                // Current robot position and orientation from odometry modules:
-                CatType_Point getRobotPos = new CatType_Point(realSense.getXPos(), realSense.getYPos());
-                double getTheta = realSense.getRotation();
-
-                // Assign the point to follow
-                CatType_CurvePoint targetPointOnLine = motionProfile.getPointOnLine();
-                double totalDistRemaining = motionProfile.getDistanceToFinalTargetPoint();
-                int targetPointIndex = motionProfile.getTargetPoint();
-
-                // Check if ready to end without the isNonStop.
-                if (!isNonStop) {
-                    if ((Math.abs(targetPoints.get(targetPoints.size() - 1).y - getRobotPos.y) < 2 &&
-                            Math.abs(targetPoints.get(targetPoints.size() - 1).x - getRobotPos.x) < 2) &&
-                            (Math.abs(targetPoints.get(targetPoints.size() - 1).getTheta() - getTheta) < 5)) {
-
-                        keepDriving = false;
-                    }
-                } else {
-
-                    // if isNonStop
-                    if (xMin < getRobotPos.x && getRobotPos.x < xMax &&
-                            yMin < getRobotPos.y && getRobotPos.y < yMax &&
-                            thetaMin < getTheta && getTheta < thetaMax) {
-
-                        keepDriving = false;
-                    }
-
-
-                }
-
-
-                /*
-                Calculate robot angles:
-                 */
-                double absAngleToTarget = (Math.atan2(targetPointOnLine.x - getRobotPos.x,
-                        targetPointOnLine.y - getRobotPos.y));
-                double relativeAngleToTarget = absAngleToTarget - Math.toRadians(getTheta);
-                /*
-                Calculate robot mecanum wheel powers:
-                 */
-                double lFrontPower = (Math.cos(relativeAngleToTarget) +
-                        Math.sin(relativeAngleToTarget));
-                double rFrontPower = (Math.cos(relativeAngleToTarget) -
-                        Math.sin(relativeAngleToTarget));
-                double lBackPower;
-                double rBackPower;
-
-                // Set powers for mecanum wheels:
-                lBackPower = rFrontPower;
-                rBackPower = lFrontPower;
-
-                double minTP = (motionProfile.getDistanceToFinalTargetPoint() - 6.0) / -20.0;
-
-                if (minTP > .2) {
-                    minTP = .2;
-                } else if (minTP < 0) {
-                    minTP = 0;
-                }
-
-                if ((getTheta - targetPoints.get(targetPointIndex).theta) < 2) {
-                    minTP = 0;
-                }
-
-                double turnPower = Math.abs((getTheta - targetPoints.get(targetPointIndex).theta) / 120.0);
-
-                if (turnPower < minTP) {
-                    turnPower = minTP;
-                }
-                if (turnPower > .5) {
-                    turnPower = .5;
-                }
-                //Log.d("catbot", String.format("minTP: %.2f , TP: %.2f", minTP, turnPower));
-
-                /*
-                Calculate scale factor and motor powers:
-                 */
-                double SF = findScalor(lFrontPower, rFrontPower, lBackPower, rBackPower);
-                lFrontPower = lFrontPower * getPower * SF;
-                rFrontPower = rFrontPower * getPower * SF;
-                lBackPower = lBackPower * getPower * SF;
-                rBackPower = rBackPower * getPower * SF;
-
-                // Adds TURN powers to each mecanum wheel.
-                if ((getTheta - targetPoints.get(targetPointIndex).theta) < 0) {
-                    // Turn right
-                    rFrontPower = rFrontPower - (turnPower);
-                    rBackPower = rBackPower - (turnPower);
-                    lFrontPower = lFrontPower + (turnPower);
-                    lBackPower = lBackPower + (turnPower);
-                } else {
-                    // Turn left
-                    rFrontPower = rFrontPower + (turnPower);
-                    rBackPower = rBackPower + (turnPower);
-                    lFrontPower = lFrontPower - (turnPower);
-                    lBackPower = lBackPower - (turnPower);
-                }
-
-                // Calculate scale factor and motor powers:
-                double SF2 = findScalor(lFrontPower, rFrontPower, lBackPower, rBackPower);
-                leftFrontMotor.setPower(lFrontPower * SF2);
-                rightFrontMotor.setPower(rFrontPower * SF2);
-                leftRearMotor.setPower(lBackPower * SF2);
-                rightRearMotor.setPower(rBackPower * SF2);
-                if(movementTimer.seconds() > 6){
-                    movementTimer.reset();
-                    double distance = Math.sqrt(Math.pow(prevX-getRobotPos.x,2) + Math.pow(prevY - getRobotPos.y,2) );
-                    if(distance<.5){
-                        keepDriving = false;
-                        Log.d("catbot",String.format("no movement stop distance %.3f %.3f %.3f",distance,getRobotPos.x,getRobotPos.y));
-                    }
-                    prevX = getRobotPos.x;
-                    prevY = getRobotPos.y;
-                    prevTheta = getTheta;
-                }
-                Log.d("catbot", String.format("LF:%.2f RF:%.2f LR:%.2f RR:%.2f" +
-                                " Tar:%.2f %.2f %.1f" +
-                                " Aim:%.2f %.2f %.1f" +
-                                " Cur:%.2f %.2f %.1f  Pow: %.2f Tp:%.2f %s",
-                        leftFrontMotor.getPower(), rightFrontMotor.getPower(),
-                        leftRearMotor.getPower(), rightRearMotor.getPower(),
-                        targetPoints.get(targetPointIndex).x, targetPoints.get(targetPointIndex).y,
-                        targetPoints.get(targetPointIndex).theta,
-                        targetPointOnLine.x, targetPointOnLine.y, targetPointOnLine.theta,
-                        getRobotPos.x, getRobotPos.y, getTheta, getPower, turnPower, isNonStop?"ns":"st"));
-
-                break;
-            }
-            case TRANSLATE: {
-                // Current robot position and orientation from odometry modules:
-                double getY = realSense.getYPos();
-                double getX = realSense.getXPos();
-                double getTheta = realSense.getRotation();
-
-                if(movementTimer.seconds() > 1){
-                    movementTimer.reset();
-                    double distance = Math.sqrt(Math.pow(prevX-getX,2) + Math.pow(prevY - getY,2) );
-                    if(distance<0.5){
-                        keepDriving = false;
-                        Log.d("catbot",String.format("no movement stop distance %.3f %.3f %.3f",distance,getX,getY));
-                    }
-                    prevX = getX;
-                    prevY = getY;
-                    prevTheta = getTheta;
-                }
-
-
-                // Check if ready to end without the isNonStop.
-                if (!isNonStop) {
-                    if ((Math.abs(targetY - getY) < tolerance && Math.abs(targetX - getX) < tolerance) &&
-                            (Math.abs(getTheta - targetTheta) < 5)) {
-
-                        keepDriving = false;
-                    }
-                } else {
-
-                    // if isNonStop
-                    if (xMin < getX && getX < xMax && yMin < getY && getY < yMax &&
-                            thetaMin < getTheta && getTheta < thetaMax) {
-
-                        keepDriving = false;
-                    }
-
-                }
-
-
-
-
-                /*
-                Calculate robot angles:
-                 */
-                double absAngleToTarget = (Math.atan2(targetX - getX, targetY - getY));
-                double relativeAngleToTarget = absAngleToTarget - Math.toRadians(getTheta);
-                /*
-                Calculate robot mecanum wheel powers:
-                 */
-                double lFrontPower = (Math.cos(relativeAngleToTarget) +
-                        Math.sin(relativeAngleToTarget));
-                double rFrontPower = (Math.cos(relativeAngleToTarget) -
-                        Math.sin(relativeAngleToTarget));
-                double lBackPower;
-                double rBackPower;
-
-                // Set powers for mecanum wheels:
-                lBackPower = rFrontPower;
-                rBackPower = lFrontPower;
-
-                double minTP = (motionProfile.getDistanceToTarget() - 6.0) / -20.0;
-
-                if (minTP > .2) {
-                    minTP = .2;
-                } else if (minTP < 0) {
-                    minTP = 0;
-                }
-
-                if ((getTheta - targetTheta) < 2) {
-                    minTP = 0;
-                }
-
-                double turnPower = Math.abs((getTheta - targetTheta) / 120.0);
-
-                if (turnPower < minTP) {
-                    turnPower = minTP;
-                }
-                if (turnPower > .5) {
-                    turnPower = .5;
-                }
-                //Log.d("catbot", String.format("minTP: %.2f , TP: %.2f", minTP, turnPower));
-
-                /*
-                Calculate scale factor and motor powers:
-                 */
-                double SF = findScalor(lFrontPower, rFrontPower, lBackPower, rBackPower);
-                lFrontPower = lFrontPower * getPower * SF;
-                rFrontPower = rFrontPower * getPower * SF;
-                lBackPower = lBackPower * getPower * SF;
-                rBackPower = rBackPower * getPower * SF;
-
-                // Adds TURN powers to each mecanum wheel.
-                if ((getTheta - targetTheta) < 0) {
-                    // Turn right
-                    rFrontPower = rFrontPower - (turnPower);
-                    rBackPower = rBackPower - (turnPower);
-                    lFrontPower = lFrontPower + (turnPower);
-                    lBackPower = lBackPower + (turnPower);
-                } else {
-                    // Turn left
-                    rFrontPower = rFrontPower + (turnPower);
-                    rBackPower = rBackPower + (turnPower);
-                    lFrontPower = lFrontPower - (turnPower);
-                    lBackPower = lBackPower - (turnPower);
-                }
-
-                // Calculate scale factor and motor powers:
-                double SF2 = findScalor(lFrontPower, rFrontPower, lBackPower, rBackPower);
-                leftFrontMotor.setPower(lFrontPower * SF2);
-                rightFrontMotor.setPower(rFrontPower * SF2);
-                leftRearMotor.setPower(lBackPower * SF2);
-                rightRearMotor.setPower(rBackPower * SF2);
-
-                Log.d("catbot", String.format("Translate LF:%.2f; RF:%.2f; LR:%.2f; RR:%.2f;" +
-                                "   TargetX/Y/Θ: %.2f %.2f %.1f;" +
-                                "   CurrentX/Y/Θ: %.2f %.2f %.1f;  Power: %.2f",
-                        leftFrontMotor.getPower(), rightFrontMotor.getPower(),
-                        leftRearMotor.getPower(), rightRearMotor.getPower(),
-                        targetX, targetY, targetTheta,
-                        getX, getY, getTheta, getPower));
-                FtcDashboard dashboard = FtcDashboard.getInstance();
-                TelemetryPacket packet = new TelemetryPacket();
-                double[] bxPoints = {8, -8, -8, 8};
-                double[] byPoints = {8, 8, -8, -8};
-                rotatePoints(bxPoints, byPoints, getTheta);
-                for (int i = 0; i < 4; i++) {
-                    bxPoints[i] += getY - 52;
-                    byPoints[i] -= getX + 56;
-                }
-                packet.fieldOverlay()
-                        .setStrokeWidth(1)
-                        .setStroke("red").strokePolygon(bxPoints, byPoints);
-                dashboard.sendTelemetryPacket(packet);
-                break;
-            }
-            case INTAKE:{
-                leftFrontMotor.setPower(strafePower);
-                rightFrontMotor.setPower(strafePower);
-                leftRearMotor.setPower(strafePower);
-                rightRearMotor.setPower(strafePower);
-
-                if(mainHW.jaws.haveCone()){
-                    keepDriving = false;
-                }
-            }
-        }
-
-        if (!keepDriving) {
-            Log.d("catbot", String.format("Translate TargetX/Y/Θ: %.2f %.2f %.1f; current %.2f %.2f %.1f time: %.2f timeout %.2f done",
-                    targetX, targetY, targetTheta,
-                    realSense.getXPos(),
-                    realSense.getYPos(),
-                    realSense.getRotation(),
-                    runTime.seconds(), timeout));
-            if (isNonStop){
-                isDone = true;
-                return true;
-            } else {
-                // Stop all motion;
-                setDrivePowers(0, 0, 0, 0);
-                isDone = true;
-                return true;
-            }
-        }
-        return isDone;
-    }
     private static void rotatePoints(double[] xPoints, double[] yPoints, double angle) {
         for (int i = 0; i < xPoints.length; i++) {
             double x = xPoints[i];

@@ -91,8 +91,8 @@ public class CatHW_Async
 
        // opMode.telemetry.addData("Initialize", "Vision...");
        // opMode.telemetry.update();
-        //eyes = new CatHW_Vision(this);
-        //eyes.initVision(hwMap);
+        eyes = new CatHW_Vision(this);
+        eyes.initVision(hwMap);
 
         opMode.telemetry.addData("Initialize", "All Done...  BOOM!");
         opMode.telemetry.update();
