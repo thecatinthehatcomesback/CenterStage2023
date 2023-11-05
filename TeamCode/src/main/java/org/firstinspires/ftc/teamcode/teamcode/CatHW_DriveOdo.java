@@ -36,7 +36,6 @@ import java.util.ArrayList;
  */
 public class CatHW_DriveOdo extends CatHW_Subsystem
 {
-    SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
     //----------------------------------------------------------------------------------------------
     // Odometry Module Constants:                               TODO: Are these constants updated???
     //----------------------------------------------------------------------------------------------
@@ -102,12 +101,12 @@ public class CatHW_DriveOdo extends CatHW_Subsystem
     ElapsedTime runTime = new ElapsedTime();
 
     // Motors:
-    public DcMotor leftFrontMotor = null;
-    public DcMotor rightFrontMotor = null;
-    public DcMotor leftRearMotor = null;
-    public DcMotor rightRearMotor = null;
+    //public DcMotor leftFrontMotor = null;
+   // public DcMotor rightFrontMotor = null;
+    //public DcMotor leftRearMotor = null;
+    //public DcMotor rightRearMotor = null;
 
-    public AnalogInput distanceSensor = null;
+    //public AnalogInput distanceSensor = null;
 
 
 
@@ -133,6 +132,7 @@ public class CatHW_DriveOdo extends CatHW_Subsystem
         super(mainHardware);
 
     }
+    SampleMecanumDrive drive;
 
     /**
      * Initialize standard Hardware interfaces in the CatHW_DriveOdo hardware.
@@ -143,29 +143,29 @@ public class CatHW_DriveOdo extends CatHW_Subsystem
 
 
         // Define and Initialize Motors: //
-        leftFrontMotor = hwMap.dcMotor.get("leftFront");
-        rightFrontMotor = hwMap.dcMotor.get("rightFront");
-        leftRearMotor = hwMap.dcMotor.get("leftRear");
-        rightRearMotor = hwMap.dcMotor.get("rightRear");
+        //leftFrontMotor = hwMap.dcMotor.get("leftFront");
+        //rightFrontMotor = hwMap.dcMotor.get("rightFront");
+        //leftRearMotor = hwMap.dcMotor.get("leftRear");
+        //rightRearMotor = hwMap.dcMotor.get("rightRear");
         //distanceSensor = hwMap.analogInput.get("distance");
 
-
+        drive = new SampleMecanumDrive(hwMap);
         // Define motor directions: //
-        leftFrontMotor.setDirection(DcMotor.Direction.FORWARD);
-        rightFrontMotor.setDirection(DcMotor.Direction.FORWARD);
-        leftRearMotor.setDirection(DcMotor.Direction.REVERSE);
-        rightRearMotor.setDirection(DcMotor.Direction.FORWARD);
+        //leftFrontMotor.setDirection(DcMotor.Direction.FORWARD);
+        //rightFrontMotor.setDirection(DcMotor.Direction.FORWARD);
+        //leftRearMotor.setDirection(DcMotor.Direction.REVERSE);
+        //rightRearMotor.setDirection(DcMotor.Direction.FORWARD);
 
 
         // Define motor zero power behavior: //
-        setDriveToBrake();
+        //setDriveToBrake();
 
         // Set motor modes: //
-        resetDriveEncoders();
-        setDriveRunWithoutEncoders();
+        //resetDriveEncoders();
+        //setDriveRunWithoutEncoders();
 
         // Set all motors to run at no power so that the robot doesn't move during init: //
-        setDrivePowers(0, 0, 0, 0);
+        //setDrivePowers(0, 0, 0, 0);
 
         // Sets enums to a default value: //
         currentMethod = DRIVE_METHOD.TRANSLATE;
@@ -240,28 +240,10 @@ public class CatHW_DriveOdo extends CatHW_Subsystem
         targetTheta = theta;
         Pose2d poseEstimate = drive.getPoseEstimate();
 
-
-        if (isNonStop){
-            //if the last drive was nonstop
-            isNonStop = false;
-
-            Trajectory traj1 = drive.trajectoryBuilder(poseEstimate)
-                    .splineTo(new Vector2d(x, y), Math.toRadians(theta))
-                    .build();
-            drive.followTrajectory(traj1);
-        }else {
-            //if the last drive was normal
-            Trajectory traj1 = drive.trajectoryBuilder(poseEstimate)
-                    .splineTo(new Vector2d(x, y), Math.toRadians(theta))
-                    .build();
-            drive.followTrajectoryAsync(traj1);
-
-        }
-        drive.setWeightedDrivePower(new Pose2d(
-                power,
-                power,
-                power
-        ));
+        Trajectory traj1 = drive.trajectoryBuilder(new Pose2d())
+                .splineToConstantHeading(new Vector2d(x, y), Math.toRadians(theta))
+                .build();
+        drive.followTrajectory(traj1);
 
 
         // Reset timer once called
@@ -469,10 +451,10 @@ public class CatHW_DriveOdo extends CatHW_Subsystem
         // Reset timer once called
         runTime.reset();
     }
-    public double getDistance(){
+    /*public double getDistance(){
         return (distanceSensor.getVoltage() - 0.16) * 83.3 + 10;
 
-    }
+    }*/
 
 
 
@@ -550,70 +532,73 @@ public class CatHW_DriveOdo extends CatHW_Subsystem
      * @param leftBack   motor's power.
      * @param rightBack  motor's power.
      */
-    public void setDrivePowers(double leftFront, double rightFront, double leftBack, double rightBack) {
+    /*public void setDrivePowers(double leftFront, double rightFront, double leftBack, double rightBack) {
         leftFrontMotor.setPower(leftFront);
         rightFrontMotor.setPower(rightFront);
         leftRearMotor.setPower(leftBack);
         rightRearMotor.setPower(rightBack);
-    }
+    }*/
 
     /**
      * Set drive train motors to BRAKE.
      */
-    public void setDriveToBrake() {
+    /*public void setDriveToBrake() {
         leftFrontMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightFrontMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         leftRearMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightRearMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-    }
+    }*/
 
     /**
      * Set drive train motors to FLOAT (coast).
      */
-    public void setDriveToCoast() {
+    /*public void setDriveToCoast() {
         leftFrontMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         rightFrontMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         leftRearMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         rightRearMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-    }
+    }*/
 
     /**
      * Set drive train motors to STOP_AND_RESET_ENCODER.
      */
-    public void resetDriveEncoders() {
+    /*public void resetDriveEncoders() {
         leftFrontMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightFrontMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         leftRearMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightRearMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-    }
+    }*/
 
     /**
      * Set drive train motors to RUN_USING_ENCODER.
      */
-    public void setDriveRunUsingEncoders() {
+    /*public void setDriveRunUsingEncoders() {
         leftFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         leftRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-    }
+    }*/
 
     /**
      * Set drive train motors to RUN_WITHOUT_ENCODER.
      */
-    public void setDriveRunWithoutEncoders() {
+    /*public void setDriveRunWithoutEncoders() {
         leftFrontMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rightFrontMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         leftRearMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rightRearMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-    }
+    }*/
+
+
 
     /**
      * Set drive train motors to RUN_TO_POSITION.
      */
-    public void setDriveRunToPosition() {
+    /*public void setDriveRunToPosition() {
         leftFrontMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         rightFrontMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         leftRearMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         rightRearMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
+     */
 }

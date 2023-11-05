@@ -152,7 +152,7 @@ public class MainTeleOp extends LinearOpMode
 
             // DRIVE!!!
             if (!turningMode) {
-                robot.drive.setDrivePowers(leftFront, rightFront, leftBack, rightBack);
+                robot.drive.drive.setMotorPowers(leftFront, leftBack, rightBack, rightFront);
             }
 
             if (gamepad1.x) {
@@ -171,7 +171,7 @@ public class MainTeleOp extends LinearOpMode
             //--------------------------------------------------------------------------------------
             // Telemetry Data:
             //--------------------------------------------------------------------------------------
-            telemetry.addData("Power", "LF %.2f RF %.2f LB %.2f RB %.2f", robot.drive.leftFrontMotor.getPower(), robot.drive.rightFrontMotor.getPower(),robot.drive.leftRearMotor.getPower(),robot.drive.rightRearMotor.getPower());
+            //telemetry.addData("Power", "LF %.2f RF %.2f LB %.2f RB %.2f", robot.drive.leftFrontMotor.getPower(), robot.drive.rightFrontMotor.getPower(),robot.drive.leftRearMotor.getPower(),robot.drive.rightRearMotor.getPower());
             //telemetry.addData("Power", "LF %s RF %s LB %s RB %s", robot.drive.leftFrontMotor.getDirection().toString(), robot.drive.rightFrontMotor.getDirection().toString(),robot.drive.leftRearMotor.getDirection().toString(),robot.drive.rightRearMotor.getDirection().toString());
 
             telemetry.addData("Game Timer","%.2f",elapsedGameTime.time());

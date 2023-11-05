@@ -113,7 +113,7 @@ public class MainAutonomous extends LinearOpMode {
             /*
              * LED code:
              */
-            if (CatHW_Async.isRedAlliance && !CatHW_Async.isLeftAlliance) {
+           /* if (CatHW_Async.isRedAlliance && !CatHW_Async.isLeftAlliance) {
                 robot.lights.setDefaultColor(RevBlinkinLedDriver.BlinkinPattern.RED);
             } else if(CatHW_Async.isRedAlliance && CatHW_Async.isLeftAlliance) {
                 robot.lights.setDefaultColor(RevBlinkinLedDriver.BlinkinPattern.HEARTBEAT_RED);
@@ -121,7 +121,7 @@ public class MainAutonomous extends LinearOpMode {
                 robot.lights.setDefaultColor(RevBlinkinLedDriver.BlinkinPattern.BLUE);
             }else if(!CatHW_Async.isRedAlliance && CatHW_Async.isLeftAlliance){
                 robot.lights.setDefaultColor(RevBlinkinLedDriver.BlinkinPattern.HEARTBEAT_BLUE);
-            }
+            }*/
 
 
 
@@ -144,7 +144,7 @@ public class MainAutonomous extends LinearOpMode {
             }else if(!robot.isLeftAlliance && !robot.isRedAlliance){
                 telemetry.addData("Alliance","Blue, Right");
             }
-            telemetry.addData("Distance", robot.jaws.intakeDistance.getDistance(DistanceUnit.INCH));
+            //telemetry.addData("Distance", robot.jaws.intakeDistance.getDistance(DistanceUnit.INCH));
 
             dashboardTelemetry.update();
             telemetry.update();
@@ -165,7 +165,8 @@ public class MainAutonomous extends LinearOpMode {
          * DO STUFF FOR the OPMODE!!!
          */
         runningTime.reset();
-       robot.drive.quickDrive(4,4,0,.5,5);
+       robot.drive.quickDrive(4,0,0,.5,5);
+       robot.robotWait(5);
     }
 
 }

@@ -70,7 +70,7 @@ public class EasyOpenCVExample extends LinearOpMode
             public void onOpened()
             {
                 webcam.startStreaming(320,240, OpenCvCameraRotation.UPRIGHT);
-                FtcDashboard.getInstance().startCameraStream(webcam, 10);
+                FtcDashboard.getInstance().startCameraStream(webcam, 8);
             }
 
             @Override
@@ -96,6 +96,9 @@ public class EasyOpenCVExample extends LinearOpMode
 
             telemetry.addData("Position", pipeline.position);
             telemetry.update();
+            dashboardTelemetry.addData("Analysis Right", pipeline.avgRightGetAnalysis());
+            dashboardTelemetry.addData("Analysis Middle", pipeline.avgMiddleGetAnalysis());
+            dashboardTelemetry.addData("Analysis Left", pipeline.avgLeftGetAnalysis());
             dashboardTelemetry.addData("Analysis Red", pipeline.avgRightGetAnalysis());
             dashboardTelemetry.addData("robot pos", pipeline.robotPosition);
             dashboardTelemetry.addData("Position", pipeline.position);
