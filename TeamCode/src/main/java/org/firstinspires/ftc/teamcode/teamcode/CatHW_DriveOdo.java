@@ -241,7 +241,7 @@ public class CatHW_DriveOdo extends CatHW_Subsystem
         Pose2d poseEstimate = drive.getPoseEstimate();
 
         Trajectory traj1 = drive.trajectoryBuilder(new Pose2d())
-                .splineToConstantHeading(new Vector2d(x, y), Math.toRadians(theta))
+                .lineToConstantHeading(new Vector2d(y,x))
                 .build();
         drive.followTrajectory(traj1);
 

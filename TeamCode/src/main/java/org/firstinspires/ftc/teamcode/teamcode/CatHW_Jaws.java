@@ -32,7 +32,7 @@ public class CatHW_Jaws extends CatHW_Subsystem
     //public CRServo intakeMotor = null;
     //public DcMotor intakeLift= null;
     public DcMotor left_lift = null;
-    public DcMotor right_lift = null;
+    public DcMotor hook = null;
     public DcMotor tilt = null;
     public Servo claw = null;
 
@@ -69,33 +69,10 @@ public class CatHW_Jaws extends CatHW_Subsystem
 
         // Define and initialize motors: //
 
+        hook = hwMap.dcMotor.get("hook");
+        hook.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        hook.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        left_lift = hwMap.dcMotor.get("left_lift");
-        left_lift.setDirection(DcMotorSimple.Direction.FORWARD);
-        left_lift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        left_lift.setTargetPosition(0);
-        left_lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-
-        right_lift = hwMap.dcMotor.get("right_lift");
-        right_lift.setDirection(DcMotorSimple.Direction.REVERSE);
-        right_lift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        right_lift.setTargetPosition(0);
-        right_lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        tilt = hwMap.dcMotor.get("tilt");
-        tilt.setDirection(DcMotorSimple.Direction.REVERSE);
-        tilt.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        tilt.setTargetPosition(0);
-        tilt.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-
-
-        claw = hwMap.servo.get("claw");
-
-        intakeColor = hwMap.colorSensor.get("intake_color");
-
-        intakeDistance = hwMap.get(DistanceSensor.class, "intake_color");
 
         liftTime = new ElapsedTime();
         pidTimer = new ElapsedTime();
@@ -160,16 +137,14 @@ public class CatHW_Jaws extends CatHW_Subsystem
     public void setLiftHighPole(double power){
         left_lift.setTargetPosition(504);
         left_lift.setPower(power);
-        right_lift.setTargetPosition(504);
-        right_lift.setPower(power);
+        hook.setTargetPosition(504);
+        hook.setPower(power);
         setArmHeight(160);
     }
 
-    public void setLiftHeight(int height, double power){
-        left_lift.setTargetPosition(height);
-        left_lift.setPower(power);
-        right_lift.setTargetPosition(height);
-        right_lift.setPower(power);
+    public void setLiftHeight(double height, double power){
+        //hook.setTargetPosition(height);
+        hook.setPower(power);
 
     }
     public void setArmHeight(int height){
@@ -208,10 +183,10 @@ public class CatHW_Jaws extends CatHW_Subsystem
 
     public void resetLift(){
         left_lift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        right_lift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        hook.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         left_lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        right_lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        hook.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
 
@@ -224,15 +199,15 @@ public class CatHW_Jaws extends CatHW_Subsystem
     public void bumpLift(int bumpAmount) {
         if (bumpAmount > 0.5){
             left_lift.setTargetPosition(bumpAmount + left_lift.getCurrentPosition());
-            right_lift.setTargetPosition(bumpAmount + right_lift.getCurrentPosition());
+            hook.setTargetPosition(bumpAmount + hook.getCurrentPosition());
             left_lift.setPower(1);
-            right_lift.setPower(1);
+            hook.setPower(1);
 
         }else if(bumpAmount <-0.5){
             left_lift.setTargetPosition(bumpAmount + left_lift.getCurrentPosition());
             left_lift.setPower(.7);
-            right_lift.setPower(.7);
-            right_lift.setTargetPosition(bumpAmount + right_lift.getCurrentPosition());
+            hook.setPower(.7);
+            hook.setTargetPosition(bumpAmount + hook.getCurrentPosition());
 
 
         }

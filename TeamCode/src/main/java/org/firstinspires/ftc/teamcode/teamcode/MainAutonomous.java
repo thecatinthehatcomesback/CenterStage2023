@@ -5,9 +5,13 @@ import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
+import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.geometry.Vector2d;
+import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.teamcode.teamcode.drive.SampleMecanumDrive;
+
 
 /**
  * MainAutonomous.java
@@ -164,9 +168,27 @@ public class MainAutonomous extends LinearOpMode {
          * Runs after hit start:
          * DO STUFF FOR the OPMODE!!!
          */
-        runningTime.reset();
-       robot.drive.quickDrive(4,0,0,.5,5);
-       robot.robotWait(5);
+        Pose2d startPose = new Pose2d(0, 0, Math.toRadians(0));
+
+        SampleMecanumDrive drive = robot.drive.drive;
+
+        drive.setPoseEstimate(startPose);
+        Trajectory myTrajectory = drive.trajectoryBuilder(new Pose2d())
+                .lineToConstantHeading(new Vector2d(10,-10))
+                .build();
+
+        Trajectory home = drive.trajectoryBuilder(myTrajectory.end())
+                .lineToConstantHeading(new Vector2d(0,0))
+                .build();
+
+
+        if(isStopRequested()) return;
+
+        drive.followTrajectory(myTrajectory);
+        drive.turn(Math.toRadians(90));
+        drive.followTrajectory(home);
+        drive.turn(Math.toRadians(0));
+
     }
 
 }

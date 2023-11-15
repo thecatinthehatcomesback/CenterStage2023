@@ -70,8 +70,8 @@ public class CatHW_Async
         // Give Telemetry for each system we begin to init:
         //opMode.telemetry.addData("Initialize", "Jaws...");
         //opMode.telemetry.update();
-        //jaws = new CatHW_Jaws(this);
-        //jaws.init();
+        jaws = new CatHW_Jaws(this);
+        jaws.init();
 
         //opMode.telemetry.addData("Initialize", "Launcher...");
         //opMode.telemetry.update();

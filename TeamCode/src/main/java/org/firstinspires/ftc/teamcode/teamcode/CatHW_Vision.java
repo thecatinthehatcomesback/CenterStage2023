@@ -43,8 +43,8 @@ public class CatHW_Vision extends CatHW_Subsystem
     public static class UltimateGoalPipeline extends OpenCvPipeline
     {
 
-        public static int regionWidth = 40;
-        public static int regionHeight = 40;
+        public static int regionWidth = 60;
+        public static int regionHeight = 60;
         /*
          * Some color constants
          */
@@ -54,28 +54,39 @@ public class CatHW_Vision extends CatHW_Subsystem
         /*
          * The core values which define the location and size of the sample regions
          */
-        static final Point REGION1_TOPLEFT_ANCHOR_POINT = new Point(125,75);
+        static final Point RIGHT_REGION_TOPLEFT_ANCHOR_POINT = new Point(RobotConstants.rightRegionx,RobotConstants.rightRegiony);
+        static final Point MIDDLE_REGION_TOPLEFT_ANCHOR_POINT = new Point(RobotConstants.middleRegionx,RobotConstants.middleRegiony);
+        static final Point LEFT_REGION_TOPLEFT_ANCHOR_POINT = new Point(RobotConstants.leftRegionx,RobotConstants.leftRegiony);
 
 
-        static int REGION_WIDTH = regionWidth;
-        static int REGION_HEIGHT = regionHeight;
-
-        final int FOUR_RING_THRESHOLD = 80;
-        final int ONE_RING_THRESHOLD = 40;
-
-        Point right_region1_pointA = new Point(
-                REGION1_TOPLEFT_ANCHOR_POINT.x,
-                REGION1_TOPLEFT_ANCHOR_POINT.y);
-        Point right_region1_pointB = new Point(
-                REGION1_TOPLEFT_ANCHOR_POINT.x + regionWidth,
-                REGION1_TOPLEFT_ANCHOR_POINT.y + regionHeight);
+        Point right_region_pointA = new Point(
+                RIGHT_REGION_TOPLEFT_ANCHOR_POINT.x,
+                RIGHT_REGION_TOPLEFT_ANCHOR_POINT.y);
+        Point right_region_pointB = new Point(
+                RIGHT_REGION_TOPLEFT_ANCHOR_POINT.x + RobotConstants.rightRegionWidth,
+                RIGHT_REGION_TOPLEFT_ANCHOR_POINT.y + RobotConstants.rightRegionHeight);
+        Point middle_region_pointA = new Point(
+                MIDDLE_REGION_TOPLEFT_ANCHOR_POINT.x,
+                MIDDLE_REGION_TOPLEFT_ANCHOR_POINT.y);
+        Point middle_region_pointB = new Point(
+                MIDDLE_REGION_TOPLEFT_ANCHOR_POINT.x + RobotConstants.middleRegionWidth,
+                MIDDLE_REGION_TOPLEFT_ANCHOR_POINT.y + RobotConstants.middleRegionHeight);
+        Point left_region_pointA = new Point(
+                LEFT_REGION_TOPLEFT_ANCHOR_POINT.x,
+                LEFT_REGION_TOPLEFT_ANCHOR_POINT.y);
+        Point left_region_pointB = new Point(
+                LEFT_REGION_TOPLEFT_ANCHOR_POINT.x + RobotConstants.leftRegionWidth,
+                LEFT_REGION_TOPLEFT_ANCHOR_POINT.y + RobotConstants.leftRegionHeight);
+        /*
+         * Working variables
+         */
+        Mat right_Cb;
+        Mat middle_Cb;
+        Mat left_Cb;
 
         /*
          * Working variables
          */
-        Mat region1_Cb;
-        Mat region2_Cb;
-        Mat region3_Cb;
         Mat YCrCb = new Mat();
         Mat Cr = new Mat();
         Mat Cr2 = new Mat();
@@ -85,9 +96,9 @@ public class CatHW_Vision extends CatHW_Subsystem
         int avgBlue;
         int avgGreen;
 
-        int avg1;
-        int avg2;
-        int avg3;
+        int avgRight;
+        int avgMiddle;
+        int avgLeft;
 
         Mat hsv = new Mat();
         Mat hsv2 = new Mat();
@@ -98,11 +109,8 @@ public class CatHW_Vision extends CatHW_Subsystem
         Scalar redLowHSV2 = new Scalar(160, 100, 20); // lower bound HSV for red
         Scalar redHighHSV2 = new Scalar(179,255,255); // higher bound HSV for red
 
-        Scalar blueLowHSV = new Scalar(100,150,0); // lower bound HSV for blue
-        Scalar blueHighHSV = new Scalar(140,255,255); //higher bound HSV for blue
-
-        Scalar greenLowHSV = new Scalar(36, 25, 25); // lower bound HSV for green
-        Scalar greenHighHSV = new Scalar(70, 255,255); //higher bound HSV for green
+        Scalar blueLowHSV = new Scalar(90, 50, 50);
+        Scalar blueHighHSV = new Scalar(128, 255, 255);
 
         // Volatile since accessed by OpMode thread w/o synchronization
         private volatile conePosition position = conePosition.NONE;
@@ -123,46 +131,38 @@ public class CatHW_Vision extends CatHW_Subsystem
         public void init(Mat firstFrame)
         {
             inputToCb(firstFrame);
-            region1_Cb = Cr.submat(new Rect(right_region1_pointA, right_region1_pointB));
-            region2_Cb = Cr2.submat(new Rect(right_region1_pointA, right_region1_pointB));
-            region3_Cb = Cr3.submat(new Rect(right_region1_pointA, right_region1_pointB));
+            right_Cb = Cr.submat(new Rect(right_region_pointA, right_region_pointB));
+            middle_Cb = Cr.submat(new Rect(middle_region_pointA, middle_region_pointB));
+            left_Cb = Cr.submat(new Rect(left_region_pointA, left_region_pointB));
         }
 
         @Override
         public Mat processFrame(Mat input)
         {
-            right_region1_pointB.x = REGION1_TOPLEFT_ANCHOR_POINT.x + regionWidth;
-            right_region1_pointB.y = REGION1_TOPLEFT_ANCHOR_POINT.y + regionHeight;
+            right_region_pointB.x = RIGHT_REGION_TOPLEFT_ANCHOR_POINT.x + regionWidth;
+            right_region_pointB.y = RIGHT_REGION_TOPLEFT_ANCHOR_POINT.y + regionHeight;
+
 
             inputToCb(input);
+            Mat mat = new Mat();
+
+            Mat thresh = new Mat();
 
             Core.inRange(hsv, redLowHSV1, redHighHSV1,Cr);
             Core.inRange(hsv, redLowHSV2, redHighHSV2,Cr);
-            avgRed = (int) Core.mean(region1_Cb).val[0];
+            Core.inRange(hsv,blueLowHSV,blueHighHSV,Cr);
+            avgRight  = (int) Core.mean(right_Cb).val[0];
 
-            Core.inRange(hsv,blueLowHSV,blueHighHSV,Cr2);
-            avgBlue = (int) Core.mean(region2_Cb).val[0];
+            avgMiddle = (int) Core.mean(middle_Cb).val[0];
 
-            Core.inRange(hsv,greenLowHSV,greenHighHSV,Cr3);
-            avgGreen = (int) Core.mean(region3_Cb).val[0];
+            avgLeft   = (int) Core.mean(left_Cb).val[0];
 
             Imgproc.rectangle(
                     input, // Buffer to draw on
-                    right_region1_pointA, // First point which defines the rectangle
-                    right_region1_pointB, // Second point which defines the rectangle
+                    right_region_pointA, // First point which defines the rectangle
+                    right_region_pointB, // Second point which defines the rectangle
                     BLUE, // The color the rectangle is drawn in
                     2); // Thickness of the rectangle lines
-
-
-            position = conePosition.NONE; // Record our analysis
-            if(avgRed < avgBlue && avgBlue > avgGreen){
-                position = conePosition.LEFT;
-
-            }else if (avgBlue < avgRed && avgRed > avgGreen){
-                position = conePosition.MIDDLE;
-            }else if(avgGreen > avgRed && avgGreen > avgBlue){
-                position = conePosition.RIGHT;
-            }
 
 
 
@@ -171,20 +171,13 @@ public class CatHW_Vision extends CatHW_Subsystem
                 ringValues.removeFirst();
             }
             ringValues.add(position);
-            if (Collections.frequency(ringValues, conePosition.LEFT) > Collections.frequency(ringValues, conePosition.RIGHT) &&
-                    Collections.frequency(ringValues, conePosition.LEFT) > Collections.frequency(ringValues, conePosition.MIDDLE)) {
-                // If the amount of INSIDE readings is the most in the past 30 readings, return INSIDE.
-                avgValue= conePosition.LEFT;
-            } else if (Collections.frequency(ringValues, conePosition.RIGHT) > Collections.frequency(ringValues, conePosition.LEFT) &&
-                    Collections.frequency(ringValues, conePosition.RIGHT) > Collections.frequency(ringValues, conePosition.MIDDLE)) {
-                // If the amount of CENTER readings is the most in the past 30 readings, return CENTER.
-                avgValue= conePosition.RIGHT;
-            } else if (Collections.frequency(ringValues, conePosition.MIDDLE) > Collections.frequency(ringValues, conePosition.RIGHT) &&
-                    Collections.frequency(ringValues, conePosition.MIDDLE) > Collections.frequency(ringValues, conePosition.LEFT)){
-                // Just return back OUTSIDE since it is the last possible value.
-               avgValue= conePosition.MIDDLE;
-            }else{
-                avgValue = conePosition.NONE;
+            position = conePosition.NONE; // Record our analysis
+            if(avgRight > avgMiddle && avgRight > avgLeft){
+                position = conePosition.RIGHT;
+            }else if (avgMiddle > avgRight && avgMiddle > avgLeft){
+                position = conePosition.MIDDLE;
+            }else if(avgLeft > avgRight && avgLeft > avgMiddle){
+                position = conePosition.LEFT;
             }
 
             return input;
@@ -192,21 +185,15 @@ public class CatHW_Vision extends CatHW_Subsystem
         void inputToCb(Mat input)
         {
             Imgproc.cvtColor(input, hsv, Imgproc.COLOR_RGB2HSV);
-            Imgproc.cvtColor(input, hsv2, Imgproc.COLOR_RGB2HSV);
-            Imgproc.cvtColor(input, hsv3, Imgproc.COLOR_RGB2HSV);
             Core.extractChannel(hsv, Cr, 0);
-            Core.extractChannel(hsv2, Cr2, 0);
-            Core.extractChannel(hsv3, Cr3, 0);
 
         }
 
 
 
-        public int avg1GetAnalysis() { return avg1; }
-        public int avg2GetAnalysis(){ return avg2; }
-        public int avg3GetAnalysis(){
-            return avg3;
-        }
+        public int avgRightGetAnalysis()  {  return avgRight;    }
+        public int avgMiddleGetAnalysis() {  return avgMiddle;     }
+        public int avgLeftGetAnalysis()    {  return avgLeft;    }
 
 
     }
@@ -264,7 +251,7 @@ public class CatHW_Vision extends CatHW_Subsystem
         webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
             @Override
             public void onOpened() {
-                webcam.startStreaming(320, 240, OpenCvCameraRotation.UPRIGHT);
+                webcam.startStreaming(640, 360, OpenCvCameraRotation.UPRIGHT);
                 FtcDashboard.getInstance().startCameraStream(webcam, 10);
             }
 

@@ -73,7 +73,11 @@ public class MainTeleOp extends LinearOpMode
             } else {
                 //robot.lights.setDefaultColor(RevBlinkinLedDriver.BlinkinPattern.BLUE);
             }
-
+            dashboardTelemetry.addData("Analysis Right", robot.eyes.pipeline.avgRight);
+            dashboardTelemetry.addData("Analysis Middle", robot.eyes.pipeline.avgMiddle);
+            dashboardTelemetry.addData("Analysis Left", robot.eyes.pipeline.avgLeft);
+            dashboardTelemetry.addData("Position", robot.eyes.pipeline.avgValue);
+            dashboardTelemetry.update();
 
         }
 
@@ -160,6 +164,13 @@ public class MainTeleOp extends LinearOpMode
             } else{
                 robot.launch.arm();
             }
+            if(gamepad1.left_trigger > .01){
+                robot.jaws.setLiftHeight(0, gamepad1.left_trigger);
+            } else if(gamepad1.right_trigger > .01){
+                robot.jaws.setLiftHeight(0, -gamepad1.right_trigger);
+            }else {
+                robot.jaws.setLiftHeight(0,0);
+            }
 
             //--------------------------------------------------------------------------------------
             // Driver 2 Controls:
@@ -175,6 +186,7 @@ public class MainTeleOp extends LinearOpMode
             //telemetry.addData("Power", "LF %s RF %s LB %s RB %s", robot.drive.leftFrontMotor.getDirection().toString(), robot.drive.rightFrontMotor.getDirection().toString(),robot.drive.leftRearMotor.getDirection().toString(),robot.drive.rightRearMotor.getDirection().toString());
 
             telemetry.addData("Game Timer","%.2f",elapsedGameTime.time());
+            telemetry.addData("Trigger", "Left %.2f right %.2f" , gamepad1.left_trigger,gamepad1.right_trigger);
 
             telemetry.update();
             dashboardTelemetry.update();
