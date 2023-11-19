@@ -4,7 +4,6 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
@@ -18,9 +17,7 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvPipeline;
 
 import java.util.ArrayDeque;
-import java.util.Collections;
 import java.util.Deque;
-import java.util.List;
 
 /**
  * CatHW_Vision.java
@@ -80,9 +77,13 @@ public class CatHW_Vision extends CatHW_Subsystem
         /*
          * Working variables
          */
-        Mat right_Cb;
-        Mat middle_Cb;
-        Mat left_Cb;
+        Mat right_Cb_red;
+        Mat middle_Cb_red;
+        Mat left_Cb_red;
+
+        Mat right_Cb_blue;
+        Mat middle_Cb_blue;
+        Mat left_Cb_blue;
 
         /*
          * Working variables
@@ -92,13 +93,13 @@ public class CatHW_Vision extends CatHW_Subsystem
         Mat Cr2 = new Mat();
         Mat Cr3 = new Mat();
 
-        int avgRed;
-        int avgBlue;
-        int avgGreen;
+        int avgRightRed;
+        int avgMiddleRed;
+        int avgLeftRed;
 
-        int avgRight;
-        int avgMiddle;
-        int avgLeft;
+        int avgRightBlue;
+        int avgMiddleBlue;
+        int avgLeftBlue;
 
         Mat hsv = new Mat();
         Mat hsv2 = new Mat();
@@ -131,9 +132,13 @@ public class CatHW_Vision extends CatHW_Subsystem
         public void init(Mat firstFrame)
         {
             inputToCb(firstFrame);
-            right_Cb = Cr.submat(new Rect(right_region_pointA, right_region_pointB));
-            middle_Cb = Cr.submat(new Rect(middle_region_pointA, middle_region_pointB));
-            left_Cb = Cr.submat(new Rect(left_region_pointA, left_region_pointB));
+            right_Cb_red = Cr.submat(new Rect(right_region_pointA, right_region_pointB));
+            middle_Cb_red = Cr.submat(new Rect(middle_region_pointA, middle_region_pointB));
+            left_Cb_red = Cr.submat(new Rect(left_region_pointA, left_region_pointB));
+
+            right_Cb_blue = Cr2.submat(new Rect(right_region_pointA, right_region_pointB));
+            middle_Cb_blue = Cr2.submat(new Rect(middle_region_pointA, middle_region_pointB));
+            left_Cb_blue = Cr2.submat(new Rect(left_region_pointA, left_region_pointB));
         }
 
         @Override
@@ -150,13 +155,18 @@ public class CatHW_Vision extends CatHW_Subsystem
 
             Core.inRange(hsv, redLowHSV1, redHighHSV1,Cr);
             Core.inRange(hsv, redLowHSV2, redHighHSV2,Cr);
-            Core.inRange(hsv,blueLowHSV,blueHighHSV,Cr);
-            avgRight  = (int) Core.mean(right_Cb).val[0];
 
-            avgMiddle = (int) Core.mean(middle_Cb).val[0];
+            avgRightRed = (int) Core.mean(right_Cb_red).val[0];
 
-            avgLeft   = (int) Core.mean(left_Cb).val[0];
+            avgMiddleRed = (int) Core.mean(middle_Cb_red).val[0];
 
+            avgLeftRed = (int) Core.mean(left_Cb_red).val[0];
+            Core.inRange(hsv,blueLowHSV,blueHighHSV,Cr2);
+            avgRightBlue = (int) Core.mean(right_Cb_blue).val[0];
+
+            avgMiddleBlue = (int) Core.mean(middle_Cb_blue).val[0];
+
+            avgLeftBlue = (int) Core.mean(left_Cb_blue).val[0];
             Imgproc.rectangle(
                     input, // Buffer to draw on
                     right_region_pointA, // First point which defines the rectangle
@@ -164,7 +174,19 @@ public class CatHW_Vision extends CatHW_Subsystem
                     BLUE, // The color the rectangle is drawn in
                     2); // Thickness of the rectangle lines
 
+            Imgproc.rectangle(
+                    input, // Buffer to draw on
+                    middle_region_pointA, // First point which defines the rectangle
+                    middle_region_pointB, // Second point which defines the rectangle
+                    BLUE, // The color the rectangle is drawn in
+                    2); // Thickness of the rectangle lines
 
+            Imgproc.rectangle(
+                    input, // Buffer to draw on
+                    left_region_pointA, // First point which defines the rectangle
+                    left_region_pointB, // Second point which defines the rectangle
+                    BLUE, // The color the rectangle is drawn in
+                    2); // Thickness of the rectangle lines
 
             if (ringValues.size() > 29) {
                 // Make sure we keep the size at a reasonable level
@@ -172,11 +194,14 @@ public class CatHW_Vision extends CatHW_Subsystem
             }
             ringValues.add(position);
             position = conePosition.NONE; // Record our analysis
-            if(avgRight > avgMiddle && avgRight > avgLeft){
+            if(avgRightRed > avgMiddleRed && avgRightRed > avgLeftRed ||
+                    avgRightBlue > avgMiddleBlue && avgRightBlue > avgLeftBlue){
                 position = conePosition.RIGHT;
-            }else if (avgMiddle > avgRight && avgMiddle > avgLeft){
+            }else if (avgMiddleRed > avgRightRed && avgMiddleRed > avgLeftRed ||
+                    avgMiddleBlue > avgRightBlue && avgMiddleBlue > avgLeftBlue){
                 position = conePosition.MIDDLE;
-            }else if(avgLeft > avgRight && avgLeft > avgMiddle){
+            }else if(avgLeftRed > avgRightRed && avgLeftRed > avgMiddleRed ||
+                    avgLeftBlue > avgRightBlue && avgLeftBlue > avgMiddleBlue){
                 position = conePosition.LEFT;
             }
 
@@ -186,14 +211,15 @@ public class CatHW_Vision extends CatHW_Subsystem
         {
             Imgproc.cvtColor(input, hsv, Imgproc.COLOR_RGB2HSV);
             Core.extractChannel(hsv, Cr, 0);
+            Core.extractChannel(hsv, Cr2, 0);
 
         }
 
 
 
-        public int avgRightGetAnalysis()  {  return avgRight;    }
-        public int avgMiddleGetAnalysis() {  return avgMiddle;     }
-        public int avgLeftGetAnalysis()    {  return avgLeft;    }
+        public int avgRightGetAnalysis()  {  return avgRightRed;    }
+        public int avgMiddleGetAnalysis() {  return avgMiddleRed;     }
+        public int avgLeftGetAnalysis()    {  return avgLeftRed;    }
 
 
     }
@@ -205,22 +231,6 @@ public class CatHW_Vision extends CatHW_Subsystem
 
 
     private HardwareMap hwMap   = null;
-    //private VuforiaLocalizer vuforia = null;
-    //private VuforiaTrackables targetsUltimateGoal = null;
-    //public List<VuforiaTrackable> allTrackables = null;
-    private OpenGLMatrix lastLocation = null;
-    double vuforiaX = 0;
-    double vuforiaY = 0;
-    boolean isVuforiaValid = false;
-    // Since ImageTarget trackables use mm to specifiy their dimensions, we must use mm for all the physical dimension.
-    // We will define some constants and conversions here
-    public static final float mmPerInch         = 25.4f;
-    private static final float mmTargetHeight   = (6) * mmPerInch;          // the height of the center of the target image above the floor
-
-    // Constants for perimeter targets
-    private static final float halfField = 72 * mmPerInch;
-    private static final float quadField  = 36 * mmPerInch;
-    private static final float fullField  = 142 * mmPerInch;
 
     /* Constructor */
     public CatHW_Vision(CatHW_Async mainHardware){

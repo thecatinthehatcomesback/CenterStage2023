@@ -73,10 +73,10 @@ public class MainTeleOp extends LinearOpMode
             } else {
                 //robot.lights.setDefaultColor(RevBlinkinLedDriver.BlinkinPattern.BLUE);
             }
-            dashboardTelemetry.addData("Analysis Right", robot.eyes.pipeline.avgRight);
-            dashboardTelemetry.addData("Analysis Middle", robot.eyes.pipeline.avgMiddle);
-            dashboardTelemetry.addData("Analysis Left", robot.eyes.pipeline.avgLeft);
-            dashboardTelemetry.addData("Position", robot.eyes.pipeline.avgValue);
+            //dashboardTelemetry.addData("Analysis Right", robot.eyes.pipeline.avgRight);
+            //dashboardTelemetry.addData("Analysis Middle", robot.eyes.pipeline.avgMiddle);
+            //dashboardTelemetry.addData("Analysis Left", robot.eyes.pipeline.avgLeft);
+            //dashboardTelemetry.addData("Position", robot.eyes.pipeline.avgValue);
             dashboardTelemetry.update();
 
         }
@@ -164,20 +164,53 @@ public class MainTeleOp extends LinearOpMode
             } else{
                 robot.launch.arm();
             }
-            if(gamepad1.left_trigger > .01){
-                robot.jaws.setLiftHeight(0, gamepad1.left_trigger);
+            /*if(gamepad1.left_trigger > .01){
+                robot.jaws.setRobotLift(0, gamepad1.left_trigger);
             } else if(gamepad1.right_trigger > .01){
-                robot.jaws.setLiftHeight(0, -gamepad1.right_trigger);
+                robot.jaws.setRobotLift(0, -gamepad1.right_trigger);
             }else {
-                robot.jaws.setLiftHeight(0,0);
+                robot.jaws.setRobotLift(0,0);
             }
+            if(gamepad1.left_trigger > .01){
+                robot.jaws.setRobotLift(0, gamepad1.left_trigger);
+            } else if(gamepad1.right_trigger > .01){
+                robot.jaws.setRobotLift(0, -gamepad1.right_trigger);
+            }else {
+                robot.jaws.setRobotLift(0,0);
+            }*/
+
+
 
             //--------------------------------------------------------------------------------------
             // Driver 2 Controls:
             //--------------------------------------------------------------------------------------
+            if(gamepad2.dpad_down){
+                robot.jaws.bumpHexHeight(-25);
+            } else if(gamepad2.dpad_up){
+                robot.jaws.bumpHexHeight(25);
+            }
 
+            if(gamepad2.left_trigger > .1){
+                robot.jaws.setIntakePower(-1);
+            } else if(gamepad2.right_trigger >.1){
+                robot.jaws.setIntakePower(1);
+            }else {
+                robot.jaws.setIntakePower(0);
+            }
 
+            if(gamepad2.left_bumper){
+                robot.jaws.dispence();
+            } else if(gamepad2.right_bumper){
+                robot.jaws.zeroPos();
+            }
+            if(gamepad2.y){
+                robot.jaws.setRobotLift(0,1);
+            }else if(gamepad2.a){
+                robot.jaws.setRobotLift(0,-1);
 
+            } else{
+                robot.jaws.setRobotLift(0,0);
+            }
 
             //--------------------------------------------------------------------------------------
             // Telemetry Data:
@@ -187,6 +220,8 @@ public class MainTeleOp extends LinearOpMode
 
             telemetry.addData("Game Timer","%.2f",elapsedGameTime.time());
             telemetry.addData("Trigger", "Left %.2f right %.2f" , gamepad1.left_trigger,gamepad1.right_trigger);
+            telemetry.addData("Lift", "%.2f power",(float)robot.jaws.liftHook.getPower());
+            telemetry.addData("Hex Lift",robot.jaws.hexLift.getCurrentPosition());
 
             telemetry.update();
             dashboardTelemetry.update();

@@ -32,9 +32,13 @@ public class CatHW_Jaws extends CatHW_Subsystem
     //public CRServo intakeMotor = null;
     //public DcMotor intakeLift= null;
     public DcMotor left_lift = null;
-    public DcMotor hook = null;
+    public DcMotor liftHook = null;
+
+    public DcMotor intake = null;
     public DcMotor tilt = null;
-    public Servo claw = null;
+    public DcMotor hexLift = null;
+    public Servo dump = null;
+
 
     public ColorSensor intakeColor = null;
     public DistanceSensor intakeDistance = null;
@@ -69,10 +73,20 @@ public class CatHW_Jaws extends CatHW_Subsystem
 
         // Define and initialize motors: //
 
-        hook = hwMap.dcMotor.get("hook");
-        hook.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        hook.setDirection(DcMotorSimple.Direction.REVERSE);
+        liftHook = hwMap.dcMotor.get("liftHook");
+        liftHook.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        liftHook.setDirection(DcMotorSimple.Direction.REVERSE);
 
+        intake = hwMap.dcMotor.get("intake");
+        intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        intake.setDirection(DcMotorSimple.Direction.FORWARD);
+
+        hexLift = hwMap.dcMotor.get("hexLift");
+        hexLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        hexLift.setTargetPosition(0);
+        hexLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        dump = hwMap.servo.get("dump");
 
         liftTime = new ElapsedTime();
         pidTimer = new ElapsedTime();
@@ -109,84 +123,50 @@ public class CatHW_Jaws extends CatHW_Subsystem
 
     // TOP 6189
     public void setLiftBottom(double power){
-        setLiftHeight(0,.25);
-        armFront();
+        setHexHeight(0,.25);
     }
     public void setLiftGroundJunction(double power){
-        setLiftHeight(0,power);
+        setHexHeight(0,power);
         tilt.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         tilt.setTargetPosition(8);
     }
     public void setLiftLowBack(double power){
-        setLiftHeight(193,power);
-        armBack();
+        setHexHeight(193,power);
     }
     public void setLiftMiddleBack(double power){
-        setLiftHeight(425,power);
-        armBack();
+        setHexHeight(425,power);
     }
     public void setLiftLowFront(double power){
-        setLiftHeight(0,power);
-
-        armFrontLow();
+        setHexHeight(0,power);
     }
     public void setLiftMiddleFront(double power){
-        setLiftHeight(170, power);
-        armFrontMedium();
-    }
-    public void setLiftHighPole(double power){
-        left_lift.setTargetPosition(504);
-        left_lift.setPower(power);
-        hook.setTargetPosition(504);
-        hook.setPower(power);
-        setArmHeight(160);
+        setHexHeight(170, power);
+
     }
 
-    public void setLiftHeight(double height, double power){
+    public void setHexHeight(double height, double power){
         //hook.setTargetPosition(height);
-        hook.setPower(power);
+        hexLift.setPower(power);
 
     }
-    public void setArmHeight(int height){
-        tilt.setTargetPosition(height);
-        tilt.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        tiltMode = TiltMode.MANUEL;
+    public void setRobotLift(double height, double power){
+        //hook.setTargetPosition(height);
+        liftHook.setPower(power);
 
     }
-    public void armBack(){
-        tilt.setTargetPosition(185);
-        tilt.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        tiltMode = TiltMode.ARMBACK;
+    public void setIntakePower(double power){
+        intake.setPower(power);
+
     }
 
-    public void armFront(){
-        tilt.setTargetPosition(0);
-        tilt.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        tiltMode = TiltMode.ARMFRONT;
-    }
-    public void armFrontMedium(){
-
-        tilt.setTargetPosition(100);
-        tilt.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        tilt.setPower(.4);
-        tiltMode = TiltMode.ARMFRONTMEDIUM;
-    }
-    public void armFrontLow(){
-        tilt.setTargetPosition(75);
-        tilt.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        lastTime = pidTimer.seconds();
-        lastError = 0;
-        tiltMode = TiltMode.ARMFRONTLOW;
-    }
 
 
     public void resetLift(){
         left_lift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        hook.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        liftHook.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         left_lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        hook.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        liftHook.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
 
@@ -196,31 +176,41 @@ public class CatHW_Jaws extends CatHW_Subsystem
         tiltMode = TiltMode.MANUEL;
 
     }
-    public void bumpLift(int bumpAmount) {
+    public void bumpHexHeight(int bumpAmount) {
         if (bumpAmount > 0.5){
-            left_lift.setTargetPosition(bumpAmount + left_lift.getCurrentPosition());
-            hook.setTargetPosition(bumpAmount + hook.getCurrentPosition());
-            left_lift.setPower(1);
-            hook.setPower(1);
+            hexLift.setTargetPosition(bumpAmount + hexLift.getCurrentPosition());
+            hexLift.setPower(1);
 
         }else if(bumpAmount <-0.5){
-            left_lift.setTargetPosition(bumpAmount + left_lift.getCurrentPosition());
-            left_lift.setPower(.7);
-            hook.setPower(.7);
-            hook.setTargetPosition(bumpAmount + hook.getCurrentPosition());
+            hexLift.setTargetPosition(bumpAmount + hexLift.getCurrentPosition());
+            hexLift.setPower(.7);
 
 
         }
+    }
+    public void autoSetBumpHexHeight() {
+        hexLift.setTargetPosition(652);
+        hexLift.setPower(1);
+
+
+    }
+    public void autoSetHexZero() {
+        hexLift.setTargetPosition(0);
+        hexLift.setPower(1);
+
+
     }
 
     public void setLiftPower(double power){
         left_lift.setPower(power);
     }
 
-    public void grabPos(){
-        claw.setPosition(.95);
+    public void zeroPos(){
+        dump.setPosition(0.55);
     }
-    public void unGrab()  { claw.setPosition(.83); }
+    public void dispence()  { dump.setPosition(.85); }
+
+
 
 
     //intake color sensor methods
