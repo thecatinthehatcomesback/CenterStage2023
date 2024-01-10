@@ -4,6 +4,8 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.teamcode.drive.CatMecanumDrive;
+
 /**
  * CatHW_Async.java
  *
@@ -36,7 +38,7 @@ public class CatHW_Async
 
     /** Other Hardware subSystems */
     CatHW_Jaws jaws = null;
-    CatHW_DriveOdo drive = null;
+    CatMecanumDrive drive = null;
 
     CatHW_Vision eyes = null;
     CatHW_Lights lights = null;
@@ -83,8 +85,7 @@ public class CatHW_Async
 
         opMode.telemetry.addData("Initialize", "Drive...");
         opMode.telemetry.update();
-        drive = new CatHW_DriveOdo(this);
-        drive.init();
+        drive = new CatMecanumDrive(hwMap);
 
         launch= new CatHW_Launch(this);
         launch.init();

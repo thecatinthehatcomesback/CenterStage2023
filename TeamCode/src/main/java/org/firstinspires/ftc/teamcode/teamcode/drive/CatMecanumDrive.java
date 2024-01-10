@@ -9,6 +9,8 @@ import static org.firstinspires.ftc.teamcode.teamcode.drive.DriveConstants.RUN_U
 import static org.firstinspires.ftc.teamcode.teamcode.drive.DriveConstants.TRACK_WIDTH;
 import static org.firstinspires.ftc.teamcode.teamcode.drive.DriveConstants.encoderTicksToInches;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.config.Config;
@@ -29,12 +31,15 @@ import com.acmerobotics.roadrunner.trajectory.constraints.TrajectoryVelocityCons
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.teamcode.trajectorysequence.TrajectorySequence;
 import org.firstinspires.ftc.teamcode.teamcode.trajectorysequence.TrajectorySequenceBuilder;
 import org.firstinspires.ftc.teamcode.teamcode.trajectorysequence.TrajectorySequenceRunner;
@@ -48,7 +53,7 @@ import java.util.List;
  * Simple mecanum drive hardware implementation for REV hardware.
  */
 @Config
-public class SampleMecanumDrive extends MecanumDrive {
+public class CatMecanumDrive extends MecanumDrive {
     public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(8, 0, 0);
     public static PIDCoefficients HEADING_PID = new PIDCoefficients(8, 0, 0);
 
@@ -59,7 +64,16 @@ public class SampleMecanumDrive extends MecanumDrive {
     public static double VX_WEIGHT = 1;
     public static double VY_WEIGHT = 1;
     public static double OMEGA_WEIGHT = 1;
-
+    public DistanceSensor leftDistance;
+    public DistanceSensor rightDistance;
+    public double leftInches = 0;
+    public double rightInches = 0;
+    private double lastTime = 0;
+    private double lastLeftError = 0;
+    private double lastRightError = 0;
+    private double rightIntegralSum = 0;
+    private double leftIntegralSum = 0;
+    private ElapsedTime pidTimer = null;
     private TrajectorySequenceRunner trajectorySequenceRunner;
 
     private static final TrajectoryVelocityConstraint VEL_CONSTRAINT = getVelocityConstraint(MAX_VEL, MAX_ANG_VEL, TRACK_WIDTH);
@@ -67,7 +81,7 @@ public class SampleMecanumDrive extends MecanumDrive {
 
     private TrajectoryFollower follower;
 
-    private DcMotorEx leftFront, leftRear, rightRear, rightFront;
+    public DcMotorEx leftFront, leftRear, rightRear, rightFront;
     private List<DcMotorEx> motors;
 
     private IMU imu;
@@ -76,7 +90,7 @@ public class SampleMecanumDrive extends MecanumDrive {
     private List<Integer> lastEncPositions = new ArrayList<>();
     private List<Integer> lastEncVels = new ArrayList<>();
 
-    public SampleMecanumDrive(HardwareMap hardwareMap) {
+    public CatMecanumDrive(HardwareMap hardwareMap) {
         super(kV, kA, kStatic, TRACK_WIDTH, TRACK_WIDTH, LATERAL_MULTIPLIER);
 
         follower = new HolonomicPIDVAFollower(TRANSLATIONAL_PID, TRANSLATIONAL_PID, HEADING_PID,
@@ -131,6 +145,10 @@ public class SampleMecanumDrive extends MecanumDrive {
                 follower, HEADING_PID, batteryVoltageSensor,
                 lastEncPositions, lastEncVels, lastTrackingEncPositions, lastTrackingEncVels
         );
+        leftDistance = hardwareMap.get(DistanceSensor.class, "leftDistance");
+        rightDistance = hardwareMap.get(DistanceSensor.class, "rightDistance");
+
+        pidTimer = new ElapsedTime();
     }
 
     public TrajectoryBuilder trajectoryBuilder(Pose2d startPose) {
@@ -304,5 +322,109 @@ public class SampleMecanumDrive extends MecanumDrive {
 
     public static TrajectoryAccelerationConstraint getAccelerationConstraint(double maxAccel) {
         return new ProfileAccelerationConstraint(maxAccel);
+    }
+    /**
+     * Will scale down our calculated power numbers if they are greater than 1.0.  If the values
+     * were greater than 1.0, the motors would spin at their max powers.  This would limit precise
+     * paths the robot could take, thus we created this method to "scale down" all the values by
+     * creating a scale factor so that there is a proportional difference in all the motor powers,
+     * giving the robot better mobility, especially with mecanum wheels.
+     *
+     * @param leftFrontValue  Prospective value for motor power that may be scaled down.
+     * @param rightFrontValue Prospective value for motor power that may be scaled down.
+     * @param leftBackValue   Prospective value for motor power that may be scaled down.
+     * @param rightBackValue  Prospective value for motor power that may be scaled down.
+     * @return what should be multiplied with all the other motor powers to get a good proportion.
+     */
+    public double findScalor(double leftFrontValue, double rightFrontValue,
+                             double leftBackValue, double rightBackValue) {
+        /*
+        PLANS:
+        1: Look at all motor values
+        2: Find the highest absolute value (the "scalor")
+        3: If the highest value is not more than 1.0, we don't need to change the values
+        4: But if it is higher than 1.0, we need to find the scale to get that value down to 1.0
+        5: Finally, we pass OUT the scale factor so that we can scale each motor down
+         */
+        double scalor = 0;
+        double scaleFactor;
+
+        double[] values;
+        values = new double[4];
+        values[0] = Math.abs(leftFrontValue);
+        values[1] = Math.abs(rightFrontValue);
+        values[2] = Math.abs(leftBackValue);
+        values[3] = Math.abs(rightBackValue);
+
+        // Find highest value:
+        for (int i = 0; i + 1 < values.length; i++) {
+            if (values[i] > scalor) {
+                scalor = values[i];
+            }
+        }
+
+        // If the highest absolute value is over 1.0, we need to get to work!  Otherwise, we done...
+        if (scalor > 1.0) {
+            // Get the reciprocal:
+            scaleFactor = 1.0 / scalor;
+        } else {
+            // Set to 1 so that we don't change anything we don't have to...
+            scaleFactor = 1.0;
+        }
+
+        // Now we have the scale factor!
+        return scaleFactor;
+        // After finding scale factor, we need to scale each motor power down by the same amount...
+    }
+
+    public void updateDistance(){
+        double newLeftInches = leftDistance.getDistance(DistanceUnit.INCH);
+        double newRightInches = rightDistance.getDistance(DistanceUnit.INCH);
+        leftInches = leftInches * 0.66 + newLeftInches * .34;
+        rightInches = rightInches * 0.66 + newRightInches * .34;
+    }
+    public boolean scoreHex(){
+        double curTime = pidTimer.seconds();
+
+        if(curTime - lastTime > .5){
+            lastTime = curTime;
+            lastLeftError = 0;
+            leftIntegralSum = 0;
+            rightIntegralSum = 0;
+        }
+        double Kp = 0.05;
+        double Ki = 0.035;
+        double Kd = 0.015; // was 0.0015
+
+
+        double goalDistance = 4.2;
+        double leftError = goalDistance  - leftInches;
+        double leftDerivative = (leftError - lastLeftError)/(curTime - lastTime);
+        leftIntegralSum += leftError * (curTime-lastTime);
+        leftFront.setPower(Kp * leftError + Ki * leftIntegralSum + Kd * leftDerivative);
+        leftRear.setPower(Kp * leftError + Ki * leftIntegralSum + Kd * leftDerivative);
+
+        double rightError = goalDistance  - rightInches;
+        double rightDerivative = (rightError - lastRightError)/(curTime - lastTime);
+        rightIntegralSum += rightError * (curTime-lastTime);
+
+        rightFront.setPower(Kp * rightError + Ki * rightIntegralSum + Kd * rightDerivative);
+        rightRear.setPower(Kp * rightError + Ki * rightIntegralSum + Kd * rightDerivative);
+
+        lastTime = curTime;
+        lastLeftError = leftError;
+        lastRightError = rightError;
+        Log.d("catbot",String.format("Lpow: %.3f Lerror: %.1f Lder: %.2f Li: %.2f Rpow: %.3f Rerror: %.1f Rder: %.2f Ri: %.2f",
+                    Kp * leftError + Ki * leftIntegralSum + Kd * leftDerivative,leftError,leftDerivative,leftIntegralSum,
+                Kp * rightError + Ki * rightIntegralSum + Kd * rightDerivative,rightError,rightDerivative,rightIntegralSum));
+        if((leftError < 0.2 && leftError >= 0 && rightError < 0.2 && leftError >= 0)
+                || leftError < -300 || rightError < -300){
+            rightFront.setPower(0);
+            leftFront.setPower(0);
+            rightRear.setPower(0);
+            leftRear.setPower(0);
+            return false;
+        }
+        return true;
     }
 }

@@ -38,6 +38,7 @@ public class CatHW_Jaws extends CatHW_Subsystem
     public DcMotor tilt = null;
     public DcMotor hexLift = null;
     public Servo dump = null;
+    public Servo droneLaunch = null;
 
 
     public ColorSensor intakeColor = null;
@@ -86,6 +87,8 @@ public class CatHW_Jaws extends CatHW_Subsystem
         hexLift.setTargetPosition(0);
         hexLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
+        droneLaunch = hwMap.servo.get("drone");
+
         dump = hwMap.servo.get("dump");
 
         liftTime = new ElapsedTime();
@@ -120,29 +123,6 @@ public class CatHW_Jaws extends CatHW_Subsystem
     }
 
     //Lift mechanism
-
-    // TOP 6189
-    public void setLiftBottom(double power){
-        setHexHeight(0,.25);
-    }
-    public void setLiftGroundJunction(double power){
-        setHexHeight(0,power);
-        tilt.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        tilt.setTargetPosition(8);
-    }
-    public void setLiftLowBack(double power){
-        setHexHeight(193,power);
-    }
-    public void setLiftMiddleBack(double power){
-        setHexHeight(425,power);
-    }
-    public void setLiftLowFront(double power){
-        setHexHeight(0,power);
-    }
-    public void setLiftMiddleFront(double power){
-        setHexHeight(170, power);
-
-    }
 
     public void setHexHeight(double height, double power){
         //hook.setTargetPosition(height);
@@ -183,22 +163,22 @@ public class CatHW_Jaws extends CatHW_Subsystem
 
         }else if(bumpAmount <-0.5){
             hexLift.setTargetPosition(bumpAmount + hexLift.getCurrentPosition());
-            hexLift.setPower(.7);
+            hexLift.setPower(1);
 
 
         }
     }
-    public void autoSetBumpHexHeight() {
-        hexLift.setTargetPosition(652);
+    public void setHexLiftHigh() {
+        hexLift.setTargetPosition(1800);
         hexLift.setPower(1);
-
-
+    }
+    public void setHexLiftMiddle() {
+        hexLift.setTargetPosition(1000);
+        hexLift.setPower(1);
     }
     public void autoSetHexZero() {
         hexLift.setTargetPosition(0);
-        hexLift.setPower(1);
-
-
+        hexLift.setPower(.5);
     }
 
     public void setLiftPower(double power){
@@ -206,11 +186,12 @@ public class CatHW_Jaws extends CatHW_Subsystem
     }
 
     public void zeroPos(){
-        dump.setPosition(0.55);
+        dump.setPosition(0);
     }
-    public void dispence()  { dump.setPosition(.85); }
+    public void dispence()  { dump.setPosition(.3); }
 
-
+    public void launchDrone(){droneLaunch.setPosition(0);}
+    public void droneSet(){droneLaunch.setPosition(.55);}
 
 
     //intake color sensor methods

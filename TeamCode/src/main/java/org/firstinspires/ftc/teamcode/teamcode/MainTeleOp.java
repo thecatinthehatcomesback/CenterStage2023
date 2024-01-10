@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import java.util.concurrent.TimeUnit;
 
@@ -94,7 +95,7 @@ public class MainTeleOp extends LinearOpMode
         double SF;
         boolean endGame = false;
         boolean under10Sec = false;
-        boolean turningMode = false;
+        boolean alignMode = false;
 
 
 
@@ -126,7 +127,7 @@ public class MainTeleOp extends LinearOpMode
             } else if (gamepad1.right_bumper || gamepad1.left_bumper) {
                 driveSpeed = 0.30;
             } else {
-                driveSpeed = 0.50;
+                driveSpeed = 1.0;
             }
 
             double forward = -((Math.abs(gamepad1.right_stick_y) < 0.05) ? 0 : gamepad1.right_stick_y);
@@ -154,16 +155,30 @@ public class MainTeleOp extends LinearOpMode
             leftBack = leftBack * SF * driveSpeed;
             rightBack = rightBack * SF * driveSpeed;
 
+            if(gamepad1.a){
+                alignMode = true;
+            }
             // DRIVE!!!
-            if (!turningMode) {
-                robot.drive.drive.setMotorPowers(leftFront, leftBack, rightBack, rightFront);
+            robot.drive.updateDistance();
+            if(alignMode){
+                if(Math.abs(forward) > .1 || Math.abs(strafe) > 0.1 || Math.abs(turn) > .1){
+                    alignMode = false;
+                }else{
+                    alignMode = robot.drive.scoreHex();
+
+                }
+            }else{
+                robot.drive.setMotorPowers(leftFront, leftBack, rightBack, rightFront);
+
             }
 
-            if (gamepad1.x) {
+
+
+            /*if (gamepad1.x) {
                 robot.launch.launch();
             } else{
                 robot.launch.arm();
-            }
+            }*/
             /*if(gamepad1.left_trigger > .01){
                 robot.jaws.setRobotLift(0, gamepad1.left_trigger);
             } else if(gamepad1.right_trigger > .01){
@@ -185,9 +200,11 @@ public class MainTeleOp extends LinearOpMode
             // Driver 2 Controls:
             //--------------------------------------------------------------------------------------
             if(gamepad2.dpad_down){
-                robot.jaws.bumpHexHeight(-25);
+                robot.jaws.autoSetHexZero();
             } else if(gamepad2.dpad_up){
-                robot.jaws.bumpHexHeight(25);
+                robot.jaws.setHexLiftHigh();
+            }else if(gamepad2.dpad_left){
+                robot.jaws.setHexLiftMiddle();
             }
 
             if(gamepad2.left_trigger > .1){
@@ -212,6 +229,12 @@ public class MainTeleOp extends LinearOpMode
                 robot.jaws.setRobotLift(0,0);
             }
 
+            if(gamepad2.x){
+                robot.jaws.launchDrone();
+            }else{
+                robot.jaws.droneSet();
+            }
+
             //--------------------------------------------------------------------------------------
             // Telemetry Data:
             //--------------------------------------------------------------------------------------
@@ -221,7 +244,9 @@ public class MainTeleOp extends LinearOpMode
             telemetry.addData("Game Timer","%.2f",elapsedGameTime.time());
             telemetry.addData("Trigger", "Left %.2f right %.2f" , gamepad1.left_trigger,gamepad1.right_trigger);
             telemetry.addData("Lift", "%.2f power",(float)robot.jaws.liftHook.getPower());
-            telemetry.addData("Hex Lift",robot.jaws.hexLift.getCurrentPosition());
+            telemetry.addData("Hex Lift","cur: %d Tar: %d pow: %.1f",robot.jaws.hexLift.getCurrentPosition(), robot.jaws.hexLift.getTargetPosition(), robot.jaws.hexLift.getPower());
+            telemetry.addData("Distance","L: %.2f R: %.2f", robot.drive.leftInches, robot.drive.rightInches);
+
 
             telemetry.update();
             dashboardTelemetry.update();

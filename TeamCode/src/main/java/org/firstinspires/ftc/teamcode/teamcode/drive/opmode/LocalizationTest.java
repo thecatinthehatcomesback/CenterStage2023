@@ -1,11 +1,12 @@
 package org.firstinspires.ftc.teamcode.teamcode.drive.opmode;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-import org.firstinspires.ftc.teamcode.teamcode.drive.SampleMecanumDrive;
+import org.firstinspires.ftc.teamcode.teamcode.drive.CatMecanumDrive;
 
 /**
  * This is a simple teleop routine for testing localization. Drive the robot around like a normal
@@ -18,7 +19,7 @@ import org.firstinspires.ftc.teamcode.teamcode.drive.SampleMecanumDrive;
 public class LocalizationTest extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
-        SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
+        CatMecanumDrive drive = new CatMecanumDrive(hardwareMap);
 
         drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
@@ -38,6 +39,8 @@ public class LocalizationTest extends LinearOpMode {
             Pose2d poseEstimate = drive.getPoseEstimate();
             telemetry.addData("x", poseEstimate.getX());
             telemetry.addData("y", poseEstimate.getY());
+            telemetry.addData("encoder","L %d R %d C %d",
+                    drive.leftRear.getCurrentPosition(),drive.rightRear.getCurrentPosition(),drive.rightFront.getCurrentPosition());
             telemetry.addData("heading", Math.toDegrees(poseEstimate.getHeading()));
 
             telemetry.update();

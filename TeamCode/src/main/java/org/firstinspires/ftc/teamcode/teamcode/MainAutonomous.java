@@ -1,14 +1,6 @@
 package org.firstinspires.ftc.teamcode.teamcode;
 
-import static org.firstinspires.ftc.teamcode.teamcode.CatHW_Vision.UltimateGoalPipeline.conePosition.LEFT;
-import static org.firstinspires.ftc.teamcode.teamcode.CatHW_Vision.UltimateGoalPipeline.conePosition.MIDDLE;
-import static org.firstinspires.ftc.teamcode.teamcode.CatHW_Vision.UltimateGoalPipeline.conePosition.NONE;
-import static org.firstinspires.ftc.teamcode.teamcode.CatHW_Vision.UltimateGoalPipeline.conePosition.RIGHT;
-
-import android.widget.Switch;
-
 import com.acmerobotics.dashboard.FtcDashboard;
-import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -16,8 +8,7 @@ import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.teamcode.teamcode.drive.SampleMecanumDrive;
+import org.firstinspires.ftc.teamcode.teamcode.drive.CatMecanumDrive;
 
 
 /**
@@ -181,7 +172,14 @@ public class MainAutonomous extends LinearOpMode {
          */
 
 
-        blueLeft();
+        if(robot.isLeftAlliance && !robot.isRedAlliance){
+            blueLeft();
+
+        }else if(!robot.isLeftAlliance && robot.isRedAlliance){
+            redRight();
+        }else if(robot.isLeftAlliance && robot.isRedAlliance){
+            redLeft();
+        }
 
 
 
@@ -195,7 +193,7 @@ public class MainAutonomous extends LinearOpMode {
         CatHW_Vision.UltimateGoalPipeline.conePosition conePos = robot.eyes.getConePos();
 
         Pose2d startPose = new Pose2d(0, 0, Math.toRadians(0));
-        SampleMecanumDrive drive = robot.drive.drive;
+        CatMecanumDrive drive = robot.drive;
         drive.setPoseEstimate(startPose);
         Trajectory leftPixel = drive.trajectoryBuilder(new Pose2d())
                 .lineToConstantHeading(new Vector2d(18,5))
@@ -257,7 +255,7 @@ public class MainAutonomous extends LinearOpMode {
                 drive.followTrajectory(moveRightPixel);
                 drive.followTrajectory(getReadyRight);
                 drive.followTrajectory(driveToOtherSideRight);
-                robot.jaws.autoSetBumpHexHeight();
+                robot.jaws.setHexLiftHigh();
                 drive.followTrajectory(dropRightPixel);
                 robot.robotWait(2);
                 robot.jaws.dispence();
@@ -275,7 +273,7 @@ public class MainAutonomous extends LinearOpMode {
                 drive.followTrajectory(moveMiddlePixel);
                 drive.followTrajectory(getReadyMiddle);
                 drive.followTrajectory(driveToOtherSideMiddle);
-                robot.jaws.autoSetBumpHexHeight();
+                robot.jaws.setHexLiftHigh();
                 drive.followTrajectory(dropMiddlePixel);
                 robot.robotWait(2);
                 robot.jaws.dispence();
@@ -293,7 +291,7 @@ public class MainAutonomous extends LinearOpMode {
                 drive.followTrajectory(moveLeftPixel);
                 drive.followTrajectory(getReadyLeft);
                 drive.followTrajectory(driveToOtherSideLeft);
-                robot.jaws.autoSetBumpHexHeight();
+                robot.jaws.setHexLiftHigh();
                 drive.followTrajectory(dropLeftPixel);
                 robot.robotWait(2);
                 robot.jaws.dispence();
@@ -313,7 +311,7 @@ public class MainAutonomous extends LinearOpMode {
         CatHW_Vision.UltimateGoalPipeline.conePosition conePos = robot.eyes.getConePos();
 
         Pose2d startPose = new Pose2d(0, 0, Math.toRadians(0));
-        SampleMecanumDrive drive = robot.drive.drive;
+        CatMecanumDrive drive = robot.drive;
         drive.setPoseEstimate(startPose);
         Trajectory moveToMiddle = drive.trajectoryBuilder(new Pose2d())
                 .lineToConstantHeading(new Vector2d(24,-6))
@@ -331,7 +329,7 @@ public class MainAutonomous extends LinearOpMode {
                 .lineToConstantHeading(new Vector2d(25, -6))
                 .build();
         Trajectory dropLeftPixel = drive.trajectoryBuilder(leftPixel.end(),Math.toRadians(85))
-                .lineToLinearHeading(new Pose2d(41, -46.5,Math.toRadians(100)))
+                .lineToLinearHeading(new Pose2d(41, -46,Math.toRadians(100)))
                 .build();
         Trajectory dropMiddlePixel = drive.trajectoryBuilder(moveMiddlePixel.end())
                 .lineToLinearHeading(new Pose2d(44, -44,Math.toRadians(110)))
@@ -365,7 +363,7 @@ public class MainAutonomous extends LinearOpMode {
                 robot.robotWait(1);
                 robot.jaws.setIntakePower(0);
                 //drive.followTrajectory(moveMiddlePixel);
-                robot.jaws.autoSetBumpHexHeight();
+                robot.jaws.setHexLiftHigh();
                 drive.followTrajectory(dropRightPixel);
                 robot.robotWait(2);
                 robot.jaws.dispence();
@@ -384,7 +382,7 @@ public class MainAutonomous extends LinearOpMode {
                 robot.robotWait(1);
                 robot.jaws.setIntakePower(0);
                 drive.followTrajectory(moveMiddlePixel);
-                robot.jaws.autoSetBumpHexHeight();
+                robot.jaws.setHexLiftHigh();
                 drive.followTrajectory(dropMiddlePixel);
                 robot.robotWait(2);
                 robot.jaws.dispence();
@@ -402,7 +400,7 @@ public class MainAutonomous extends LinearOpMode {
                 robot.jaws.setIntakePower(-.25);
                 robot.robotWait(1);
                 robot.jaws.setIntakePower(0);
-                robot.jaws.autoSetBumpHexHeight();
+                robot.jaws.setHexLiftHigh();
                 drive.followTrajectory(dropLeftPixel);
                 robot.robotWait(2);
                 robot.jaws.dispence();
@@ -421,7 +419,7 @@ public class MainAutonomous extends LinearOpMode {
         CatHW_Vision.UltimateGoalPipeline.conePosition conePos = robot.eyes.getConePos();
 
         Pose2d startPose = new Pose2d(0, 0, Math.toRadians(0));
-        SampleMecanumDrive drive = robot.drive.drive;
+        CatMecanumDrive drive = robot.drive;
         drive.setPoseEstimate(startPose);
         Trajectory leftPixel = drive.trajectoryBuilder(startPose)
                 .lineToConstantHeading(new Vector2d(18,5))
@@ -456,21 +454,6 @@ public class MainAutonomous extends LinearOpMode {
                 .lineToLinearHeading(new Pose2d(15, 37,Math.toRadians(-100)))
                 .build();
 
-        drive.followTrajectory(rightPixel);
-        robot.jaws.setIntakePower(-.25);
-        robot.robotWait(1);
-        robot.jaws.setIntakePower(0);
-        drive.followTrajectory(dropRightPixel);
-        robot.jaws.autoSetBumpHexHeight();
-        robot.robotWait(2);
-        robot.jaws.dispence();
-        robot.robotWait(2);
-        robot.jaws.zeroPos();
-        robot.robotWait(1);
-        robot.jaws.autoSetHexZero();
-        robot.robotWait(1);
-        drive.followTrajectory(LeftPark);
-
         switch(conePos) {
             case NONE:
             case RIGHT:
@@ -479,7 +462,7 @@ public class MainAutonomous extends LinearOpMode {
                 robot.robotWait(1);
                 robot.jaws.setIntakePower(0);
                 drive.followTrajectory(dropRightPixel);
-                robot.jaws.autoSetBumpHexHeight();
+                robot.jaws.setHexLiftHigh();
                 robot.robotWait(2);
                 robot.jaws.dispence();
                 robot.robotWait(2);
@@ -495,7 +478,7 @@ public class MainAutonomous extends LinearOpMode {
                 robot.robotWait(1);
                 robot.jaws.setIntakePower(0);
                 drive.followTrajectory(dropMiddlePixel);
-                robot.jaws.autoSetBumpHexHeight();
+                robot.jaws.setHexLiftHigh();
                 robot.robotWait(2);
                 robot.jaws.dispence();
                 robot.robotWait(2);
@@ -511,7 +494,7 @@ public class MainAutonomous extends LinearOpMode {
                 robot.robotWait(1);
                 robot.jaws.setIntakePower(0);
                 drive.followTrajectory(dropLeftPixel);
-                robot.jaws.autoSetBumpHexHeight();
+                robot.jaws.setHexLiftHigh();
                 robot.robotWait(2);
                 robot.jaws.dispence();
                 robot.robotWait(2);

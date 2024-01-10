@@ -4,16 +4,11 @@ import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.har
 
 import android.util.Log;
 
-import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
-import com.acmerobotics.roadrunner.geometry.Vector2d;
-import com.acmerobotics.roadrunner.trajectory.Trajectory;
-import com.qualcomm.robotcore.hardware.AnalogInput;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
-import org.firstinspires.ftc.teamcode.teamcode.drive.SampleMecanumDrive;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.teamcode.teamcode.drive.CatMecanumDrive;
 
 import java.util.ArrayList;
 
@@ -100,6 +95,9 @@ public class CatHW_DriveOdo extends CatHW_Subsystem
 
     ElapsedTime runTime = new ElapsedTime();
 
+    private DistanceSensor leftDistance;
+    private DistanceSensor rightDistance;
+
     // Motors:
     //public DcMotor leftFrontMotor = null;
    // public DcMotor rightFrontMotor = null;
@@ -132,7 +130,7 @@ public class CatHW_DriveOdo extends CatHW_Subsystem
         super(mainHardware);
 
     }
-    SampleMecanumDrive drive;
+    CatMecanumDrive drive;
 
     /**
      * Initialize standard Hardware interfaces in the CatHW_DriveOdo hardware.
@@ -141,31 +139,9 @@ public class CatHW_DriveOdo extends CatHW_Subsystem
      */
     public void init()  throws InterruptedException  {
 
-
-        // Define and Initialize Motors: //
-        //leftFrontMotor = hwMap.dcMotor.get("leftFront");
-        //rightFrontMotor = hwMap.dcMotor.get("rightFront");
-        //leftRearMotor = hwMap.dcMotor.get("leftRear");
-        //rightRearMotor = hwMap.dcMotor.get("rightRear");
-        //distanceSensor = hwMap.analogInput.get("distance");
-
-        drive = new SampleMecanumDrive(hwMap);
-        // Define motor directions: //
-        //leftFrontMotor.setDirection(DcMotor.Direction.FORWARD);
-        //rightFrontMotor.setDirection(DcMotor.Direction.FORWARD);
-        //leftRearMotor.setDirection(DcMotor.Direction.REVERSE);
-        //rightRearMotor.setDirection(DcMotor.Direction.FORWARD);
-
-
-        // Define motor zero power behavior: //
-        //setDriveToBrake();
-
-        // Set motor modes: //
-        //resetDriveEncoders();
-        //setDriveRunWithoutEncoders();
-
-        // Set all motors to run at no power so that the robot doesn't move during init: //
-        //setDrivePowers(0, 0, 0, 0);
+        drive = new CatMecanumDrive(hwMap);
+        leftDistance = hardwareMap.get(DistanceSensor.class, "leftDistance");
+        rightDistance = hardwareMap.get(DistanceSensor.class, "rightDistance");
 
         // Sets enums to a default value: //
         currentMethod = DRIVE_METHOD.TRANSLATE;
@@ -190,122 +166,6 @@ public class CatHW_DriveOdo extends CatHW_Subsystem
     // Driving Chassis Methods:
     //----------------------------------------------------------------------------------------------
 
-
-
-    /**
-     * Calls the translateDrive() method and adds in a waitUntilDone() afterwards so that the
-     * autonomous code is cleaner without having so many waitUntilDone() methods clogging up the
-     * view.
-     *
-     * @param x is the new X coordinate the robot drives to.
-     * @param y is the new Y coordinate the robot drives to.
-     * @param power at which robot max speed can be set to using motion profiling.
-     * @param theta is the angle at which the robot will TURN to while driving.
-     * @param timeoutS is how much time needs to pass before the robot moves onto the next step.
-     *                 This is used/useful for stall outs.
-     */
-    public void quickDrive(double x, double y, double theta, double power, double timeoutS){
-
-        translateDrive(x,y,power,theta,timeoutS);
-        waitUntilDone();
-    }
-
-    public void quickIntakeDrive(double power, double timeoutS){
-        intakeDrive(power,timeoutS);
-
-        waitUntilDone();
-    }
-
-
-    /**
-     * Used to move the robot across the field.  The robot can also TURN while moving along the path
-     * in order for it to face a certain by the end of its path.  This method assumes the robot has
-     * odometry modules which give an absolute position of the robot on the field.
-     *
-     * @param x is the new X coordinate the robot drives to.
-     * @param y is the new Y coordinate the robot drives to.
-     * @param power at which robot max speed can be set to using motion profiling.
-     * @param theta is the angle at which the robot will TURN to while driving.
-     * @param timeoutS is how much time needs to pass before the robot moves onto the next step.
-     *                 This is used/useful for stall outs.
-     */
-    public void translateDrive(double x, double y, double power, double theta, double timeoutS) {
-
-        currentMethod = DRIVE_METHOD.TRANSLATE;
-        timeout = timeoutS;
-        isDone = false;
-        targetX = x;
-        targetY = y;
-        strafePower = power;
-        targetTheta = theta;
-        Pose2d poseEstimate = drive.getPoseEstimate();
-
-        Trajectory traj1 = drive.trajectoryBuilder(new Pose2d())
-                .lineToConstantHeading(new Vector2d(y,x))
-                .build();
-        drive.followTrajectory(traj1);
-
-
-        // Reset timer once called
-        runTime.reset();
-        movementTimer.reset();
-        prevX = 0;
-        prevY = 0;
-        prevTheta = 0;
-    }
-
-    /**
-     * Nonstop TRANSLATE.  TODO: Add Javadoc here.
-     *
-     * @param x is the new X coordinate the robot drives to.
-     * @param y is the new Y coordinate the robot drives to.
-     * @param power at which robot max speed can be set to using motion profiling.
-     * @param theta is the angle at which the robot will TURN to while driving.
-     * @param finishedXMin
-     * @param finishedXMax
-     * @param finishedYMin
-     * @param finishedYMax
-     * @param finishedThetaMin
-     * @param finishedThetaMax
-     * @param timeoutS is how much time needs to pass before the robot moves onto the next step.
-     *                 This is used/useful for stall outs.
-     */
-    public void translateDrive(double x, double y, double power, double theta, double finishedXMin,
-                               double finishedXMax, double finishedYMin, double finishedYMax,
-                               double finishedThetaMin, double finishedThetaMax, double timeoutS){
-
-        currentMethod = DRIVE_METHOD.TRANSLATE;
-        timeout = timeoutS;
-        isDone = false;
-        targetX = x;
-        targetY = y;
-        strafePower = power;
-        targetTheta = theta;
-        xMin = finishedXMin;
-        xMax = finishedXMax;
-        yMin = finishedYMin;
-        yMax = finishedYMax;
-        thetaMin = finishedThetaMin;
-        thetaMax = finishedThetaMax;
-        maxPower = power;
-
-        // Power update Thread:
-        if (isNonStop){
-            //if the last drive was nonstop
-            // motionProfile.setNonStopTarget(x, y, power, realSense.getXPos(), realSense.getYPos());
-        }else {
-            //if the last drive was normal
-            // motionProfile.setTarget(x, y, power, realSense.getXPos(), realSense.getYPos());
-
-        }
-
-        //set it so the next one will be nonstop
-        isNonStop = true;
-
-        // Reset timer once called
-        runTime.reset();
-
-    }
     /**
      * Overloaded method (fancy way of saying same method header with different parameter list) that calls the other
      * pursuitDrive() method, but automatically sets the followRadius to the DEFAULT_FOLLOW_RADIUS constant.
@@ -471,134 +331,10 @@ public class CatHW_DriveOdo extends CatHW_Subsystem
             yPoints[i] = x * Math.sin(angle) + y * Math.cos(angle);
         }
     }
-    /**
-     * Will scale down our calculated power numbers if they are greater than 1.0.  If the values
-     * were greater than 1.0, the motors would spin at their max powers.  This would limit precise
-     * paths the robot could take, thus we created this method to "scale down" all the values by
-     * creating a scale factor so that there is a proportional difference in all the motor powers,
-     * giving the robot better mobility, especially with mecanum wheels.
-     *
-     * @param leftFrontValue  Prospective value for motor power that may be scaled down.
-     * @param rightFrontValue Prospective value for motor power that may be scaled down.
-     * @param leftBackValue   Prospective value for motor power that may be scaled down.
-     * @param rightBackValue  Prospective value for motor power that may be scaled down.
-     * @return what should be multiplied with all the other motor powers to get a good proportion.
-     */
-    public double findScalor(double leftFrontValue, double rightFrontValue,
-                             double leftBackValue, double rightBackValue) {
-        /*
-        PLANS:
-        1: Look at all motor values
-        2: Find the highest absolute value (the "scalor")
-        3: If the highest value is not more than 1.0, we don't need to change the values
-        4: But if it is higher than 1.0, we need to find the scale to get that value down to 1.0
-        5: Finally, we pass OUT the scale factor so that we can scale each motor down
-         */
-        double scalor = 0;
-        double scaleFactor;
 
-        double[] values;
-        values = new double[4];
-        values[0] = Math.abs(leftFrontValue);
-        values[1] = Math.abs(rightFrontValue);
-        values[2] = Math.abs(leftBackValue);
-        values[3] = Math.abs(rightBackValue);
 
-        // Find highest value:
-        for (int i = 0; i + 1 < values.length; i++) {
-            if (values[i] > scalor) {
-                scalor = values[i];
-            }
-        }
-
-        // If the highest absolute value is over 1.0, we need to get to work!  Otherwise, we done...
-        if (scalor > 1.0) {
-            // Get the reciprocal:
-            scaleFactor = 1.0 / scalor;
-        } else {
-            // Set to 1 so that we don't change anything we don't have to...
-            scaleFactor = 1.0;
-        }
-
-        // Now we have the scale factor!
-        return scaleFactor;
-        // After finding scale factor, we need to scale each motor power down by the same amount...
+    public void scoreHex(){
+        double theta = Math.atan((rightDistance.getDistance(DistanceUnit.INCH)-
+                leftDistance.getDistance(DistanceUnit.INCH))/(14+10));
     }
-    /**
-     * Sets powers to the four drive train motors.
-     *
-     * @param leftFront  motor's power.
-     * @param rightFront motor's power.
-     * @param leftBack   motor's power.
-     * @param rightBack  motor's power.
-     */
-    /*public void setDrivePowers(double leftFront, double rightFront, double leftBack, double rightBack) {
-        leftFrontMotor.setPower(leftFront);
-        rightFrontMotor.setPower(rightFront);
-        leftRearMotor.setPower(leftBack);
-        rightRearMotor.setPower(rightBack);
-    }*/
-
-    /**
-     * Set drive train motors to BRAKE.
-     */
-    /*public void setDriveToBrake() {
-        leftFrontMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        rightFrontMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        leftRearMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        rightRearMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-    }*/
-
-    /**
-     * Set drive train motors to FLOAT (coast).
-     */
-    /*public void setDriveToCoast() {
-        leftFrontMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        rightFrontMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        leftRearMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        rightRearMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-    }*/
-
-    /**
-     * Set drive train motors to STOP_AND_RESET_ENCODER.
-     */
-    /*public void resetDriveEncoders() {
-        leftFrontMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightFrontMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        leftRearMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightRearMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-    }*/
-
-    /**
-     * Set drive train motors to RUN_USING_ENCODER.
-     */
-    /*public void setDriveRunUsingEncoders() {
-        leftFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        leftRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-    }*/
-
-    /**
-     * Set drive train motors to RUN_WITHOUT_ENCODER.
-     */
-    /*public void setDriveRunWithoutEncoders() {
-        leftFrontMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        rightFrontMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        leftRearMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        rightRearMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-    }*/
-
-
-
-    /**
-     * Set drive train motors to RUN_TO_POSITION.
-     */
-    /*public void setDriveRunToPosition() {
-        leftFrontMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightFrontMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        leftRearMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightRearMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-    }
-     */
 }

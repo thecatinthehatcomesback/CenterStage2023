@@ -26,7 +26,6 @@ public class CatHW_Launch extends CatHW_Subsystem {
     public void init() {
         // Define and initialize motors: //
         launcher = hwMap.servo.get("drone");
-        arm();
     }
     public void arm( ){
         launcher.setPosition(0.7);
