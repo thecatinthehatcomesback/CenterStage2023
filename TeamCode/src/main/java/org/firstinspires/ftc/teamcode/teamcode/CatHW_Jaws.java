@@ -173,7 +173,11 @@ public class CatHW_Jaws extends CatHW_Subsystem
         hexLift.setPower(1);
     }
     public void setHexLiftMiddle() {
-        hexLift.setTargetPosition(1000);
+        hexLift.setTargetPosition(1100);
+        hexLift.setPower(1);
+    }
+    public void setHexLiftAuto() {
+        hexLift.setTargetPosition(900);
         hexLift.setPower(1);
     }
     public void autoSetHexZero() {
@@ -189,6 +193,7 @@ public class CatHW_Jaws extends CatHW_Subsystem
         dump.setPosition(0);
     }
     public void dispence()  { dump.setPosition(.3); }
+    public void dispenceAuto()  { dump.setPosition(.3); }
 
     public void launchDrone(){droneLaunch.setPosition(0);}
     public void droneSet(){droneLaunch.setPosition(.55);}

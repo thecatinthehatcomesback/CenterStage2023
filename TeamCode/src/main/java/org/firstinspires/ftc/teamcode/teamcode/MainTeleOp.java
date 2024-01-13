@@ -6,7 +6,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import java.util.concurrent.TimeUnit;
 
@@ -127,7 +126,7 @@ public class MainTeleOp extends LinearOpMode
             } else if (gamepad1.right_bumper || gamepad1.left_bumper) {
                 driveSpeed = 0.30;
             } else {
-                driveSpeed = 1.0;
+                driveSpeed = 0.9;
             }
 
             double forward = -((Math.abs(gamepad1.right_stick_y) < 0.05) ? 0 : gamepad1.right_stick_y);
@@ -164,7 +163,7 @@ public class MainTeleOp extends LinearOpMode
                 if(Math.abs(forward) > .1 || Math.abs(strafe) > 0.1 || Math.abs(turn) > .1){
                     alignMode = false;
                 }else{
-                    alignMode = robot.drive.scoreHex();
+                    alignMode = robot.drive.scoreHexTeleop();
 
                 }
             }else{
@@ -215,21 +214,21 @@ public class MainTeleOp extends LinearOpMode
                 robot.jaws.setIntakePower(0);
             }
 
-            if(gamepad2.left_bumper){
+            if(gamepad2.x){
                 robot.jaws.dispence();
-            } else if(gamepad2.right_bumper){
+            } else {
                 robot.jaws.zeroPos();
             }
-            if(gamepad2.y){
-                robot.jaws.setRobotLift(0,1);
-            }else if(gamepad2.a){
-                robot.jaws.setRobotLift(0,-1);
+            if(gamepad2.right_stick_y > .1){
+                robot.jaws.setRobotLift(0,gamepad2.right_stick_y);
+            }else if(gamepad2.right_stick_y < .1){
+                robot.jaws.setRobotLift(0,gamepad2.right_stick_y);
 
             } else{
                 robot.jaws.setRobotLift(0,0);
             }
 
-            if(gamepad2.x){
+            if(gamepad2.a && endGame){
                 robot.jaws.launchDrone();
             }else{
                 robot.jaws.droneSet();

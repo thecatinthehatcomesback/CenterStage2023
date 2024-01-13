@@ -383,7 +383,7 @@ public class CatMecanumDrive extends MecanumDrive {
         leftInches = leftInches * 0.66 + newLeftInches * .34;
         rightInches = rightInches * 0.66 + newRightInches * .34;
     }
-    public boolean scoreHex(){
+    public boolean scoreHexTeleop(){
         double curTime = pidTimer.seconds();
 
         if(curTime - lastTime > .5){
@@ -426,5 +426,47 @@ public class CatMecanumDrive extends MecanumDrive {
             return false;
         }
         return true;
+    }
+    public void scoreHexAutonomous(){
+        double curTime = pidTimer.seconds();
+
+        if(curTime - lastTime > .5){
+            lastTime = curTime;
+            lastLeftError = 0;
+            leftIntegralSum = 0;
+            rightIntegralSum = 0;
+        }
+        double Kp = 0.05;
+        double Ki = 0.035;
+        double Kd = 0.015; // was 0.0015
+
+
+        double goalDistance = 3.8;
+        double leftError = goalDistance  - leftInches;
+        double leftDerivative = (leftError - lastLeftError)/(curTime - lastTime);
+        leftIntegralSum += leftError * (curTime-lastTime);
+        leftFront.setPower(Kp * leftError + Ki * leftIntegralSum + Kd * leftDerivative);
+        leftRear.setPower(Kp * leftError + Ki * leftIntegralSum + Kd * leftDerivative);
+
+        double rightError = goalDistance  - rightInches;
+        double rightDerivative = (rightError - lastRightError)/(curTime - lastTime);
+        rightIntegralSum += rightError * (curTime-lastTime);
+
+        rightFront.setPower(Kp * rightError + Ki * rightIntegralSum + Kd * rightDerivative);
+        rightRear.setPower(Kp * rightError + Ki * rightIntegralSum + Kd * rightDerivative);
+
+        lastTime = curTime;
+        lastLeftError = leftError;
+        lastRightError = rightError;
+        Log.d("catbot",String.format("Lpow: %.3f Lerror: %.1f Lder: %.2f Li: %.2f Rpow: %.3f Rerror: %.1f Rder: %.2f Ri: %.2f",
+                Kp * leftError + Ki * leftIntegralSum + Kd * leftDerivative,leftError,leftDerivative,leftIntegralSum,
+                Kp * rightError + Ki * rightIntegralSum + Kd * rightDerivative,rightError,rightDerivative,rightIntegralSum));
+        if((leftError < 0.2 && leftError >= 0 && rightError < 0.2 && leftError >= 0)
+                || leftError < -300 || rightError < -300){
+            rightFront.setPower(0);
+            leftFront.setPower(0);
+            rightRear.setPower(0);
+            leftRear.setPower(0);
+        }
     }
 }

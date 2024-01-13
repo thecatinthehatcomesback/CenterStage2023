@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.teamcode;
 
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -9,6 +10,9 @@ import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.teamcode.drive.CatMecanumDrive;
+import org.firstinspires.ftc.teamcode.teamcode.drive.DriveConstants;
+import org.firstinspires.ftc.teamcode.teamcode.trajectorysequence.TrajectorySequence;
+import org.firstinspires.ftc.teamcode.teamcode.trajectorysequence.TrajectorySequenceBuilder;
 
 
 /**
@@ -172,15 +176,15 @@ public class MainAutonomous extends LinearOpMode {
          */
 
 
-        if(robot.isLeftAlliance && !robot.isRedAlliance){
+        /*if(robot.isLeftAlliance && !robot.isRedAlliance){
             blueLeft();
 
         }else if(!robot.isLeftAlliance && robot.isRedAlliance){
             redRight();
         }else if(robot.isLeftAlliance && robot.isRedAlliance){
             redLeft();
-        }
-
+        }*/
+        redLeft();
 
 
         if(isStopRequested()) return;
@@ -195,111 +199,119 @@ public class MainAutonomous extends LinearOpMode {
         Pose2d startPose = new Pose2d(0, 0, Math.toRadians(0));
         CatMecanumDrive drive = robot.drive;
         drive.setPoseEstimate(startPose);
-        Trajectory leftPixel = drive.trajectoryBuilder(new Pose2d())
-                .lineToConstantHeading(new Vector2d(18,5))
-                .build();
-        Trajectory middlePixel = drive.trajectoryBuilder(new Pose2d())
-                .lineToConstantHeading(new Vector2d(23,-2))
-                .build();
-        Trajectory rightPixel = drive.trajectoryBuilder(new Pose2d())
-                .lineToLinearHeading(new Pose2d(28,0,Math.toRadians(-85)))
-                .build();
-        Trajectory moveRightPixel = drive.trajectoryBuilder(rightPixel.end(),Math.toRadians(-85))
-                .lineToConstantHeading(new Vector2d(15, 5))
-                .build();
-        Trajectory moveLeftPixel = drive.trajectoryBuilder(leftPixel.end())
-                .lineToConstantHeading(new Vector2d(15, 5))
-                .build();
-        Trajectory moveMiddlePixel = drive.trajectoryBuilder(middlePixel.end())
-                .lineToConstantHeading(new Vector2d(15, 5))
-                .build();
-        Trajectory getReadyLeft = drive.trajectoryBuilder(moveLeftPixel.end(),-85)
-                .lineToLinearHeading(new Pose2d(28,-5,Math.toRadians(80)))
-                .build();
-        Trajectory getReadyMiddle = drive.trajectoryBuilder(moveMiddlePixel.end(),-85)
-                .lineToLinearHeading(new Pose2d(28,-5,Math.toRadians(80)))
-                .build();
-        Trajectory getReadyRight = drive.trajectoryBuilder(moveRightPixel.end(),-85)
-                .lineToLinearHeading(new Pose2d(28,-5,Math.toRadians(80)))
+        TrajectorySequence leftPixel = drive.trajectorySequenceBuilder(new Pose2d())
+                .lineToConstantHeading(new Vector2d(22,6))
+                .lineToLinearHeading(new Pose2d(8,5,Math.toRadians(-90)))
+                .lineToLinearHeading(new Pose2d(5, -65,Math.toRadians(-80)),
+                        CatMecanumDrive.getVelocityConstraint(30, DriveConstants.MAX_ANG_VEL,DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(60))
+                .lineToLinearHeading(new Pose2d(42, -75,Math.toRadians(99)),
+                        CatMecanumDrive.getVelocityConstraint(60, DriveConstants.MAX_ANG_VEL,DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(60))
                 .build();
 
-        Trajectory driveToOtherSideLeft = drive.trajectoryBuilder(getReadyLeft.end(),Math.toRadians(80))
-                .lineToLinearHeading(new Pose2d(28, -65,Math.toRadians(85)))
+
+        TrajectorySequence rightPixel = drive.trajectorySequenceBuilder(new Pose2d())
+                .lineToConstantHeading(new Vector2d(25, -3),
+                        CatMecanumDrive.getVelocityConstraint(DriveConstants.MAX_VEL, DriveConstants.MAX_ANG_VEL,DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(40))
+                .lineToLinearHeading(new Pose2d(30,-8,Math.toRadians(-100)),
+                        CatMecanumDrive.getVelocityConstraint(15, DriveConstants.MAX_ANG_VEL,DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(60))
+                .lineToConstantHeading(new Vector2d(30, 0),
+                        CatMecanumDrive.getVelocityConstraint(50, DriveConstants.MAX_ANG_VEL,DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(60))
+                .waitSeconds(.5)
+                .lineToLinearHeading(new Pose2d(8,0,Math.toRadians(-80)))
+                .lineToLinearHeading(new Pose2d(22, -65,Math.toRadians(-70)),
+                        CatMecanumDrive.getVelocityConstraint(30, DriveConstants.MAX_ANG_VEL,DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(60))
+                .lineToLinearHeading(new Pose2d(50, -75,Math.toRadians(99)),
+                        CatMecanumDrive.getVelocityConstraint(60, DriveConstants.MAX_ANG_VEL,DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(60))
+
+                .build();
+        TrajectorySequence middlePixel = drive.trajectorySequenceBuilder(new Pose2d())
+                .lineToConstantHeading(new Vector2d(30, -2))
+                .lineToLinearHeading(new Pose2d(8,0,Math.toRadians(-90)))
+                .lineToLinearHeading(new Pose2d(15, -65,Math.toRadians(-80)),
+                        CatMecanumDrive.getVelocityConstraint(30, DriveConstants.MAX_ANG_VEL,DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(60))
+                .lineToLinearHeading(new Pose2d(46, -75,Math.toRadians(99)),
+                        CatMecanumDrive.getVelocityConstraint(60, DriveConstants.MAX_ANG_VEL,DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(60))
+                .build();
+        Trajectory parkLeft = drive.trajectoryBuilder(leftPixel.end(),Math.toRadians(90))
+                .lineToLinearHeading(new Pose2d(15,-95,Math.toRadians(90)))
                 .build();
 
-        Trajectory driveToOtherSideMiddle = drive.trajectoryBuilder(getReadyMiddle.end(),Math.toRadians(80))
-                .lineToLinearHeading(new Pose2d(28, -65,Math.toRadians(85)))
+
+        Trajectory parkMiddle = drive.trajectoryBuilder(middlePixel.end(),Math.toRadians(90))
+                .lineToLinearHeading(new Pose2d(20,-85,Math.toRadians(90)))
+                .build();
+        Trajectory parkRight = drive.trajectoryBuilder(rightPixel.end(),Math.toRadians(90))
+                .lineToLinearHeading(new Pose2d(33,-85,Math.toRadians(90)))
                 .build();
 
-        Trajectory driveToOtherSideRight = drive.trajectoryBuilder(getReadyRight.end(),Math.toRadians(80))
-                .lineToLinearHeading(new Pose2d(28, -65,Math.toRadians(85)))
-                .build();
 
-        Trajectory dropMiddlePixel = drive.trajectoryBuilder(driveToOtherSideMiddle.end(),Math.toRadians(85))
-                .lineToLinearHeading(new Pose2d(25,-94,Math.toRadians(84)))
-                .build();
-        Trajectory dropLeftPixel = drive.trajectoryBuilder(driveToOtherSideLeft.end(),Math.toRadians(85))
-                .lineToLinearHeading(new Pose2d(34,-95.5,Math.toRadians(85)))
-                .build();
-        Trajectory dropRightPixel = drive.trajectoryBuilder(driveToOtherSideRight.end(),Math.toRadians(85))
-                .lineToLinearHeading(new Pose2d(18,-93,Math.toRadians(80)))
-                .build();
 
         switch(conePos) {
             case NONE:
             case RIGHT:
-                drive.followTrajectory(rightPixel);
-                robot.jaws.setIntakePower(-.33);
+                drive.followTrajectorySequence(rightPixel);
+                //robot.jaws.setIntakePower(-.33);
                 robot.robotWait(.5);
-                robot.jaws.setIntakePower(0);
-                drive.followTrajectory(moveRightPixel);
-                drive.followTrajectory(getReadyRight);
-                drive.followTrajectory(driveToOtherSideRight);
-                robot.jaws.setHexLiftHigh();
-                drive.followTrajectory(dropRightPixel);
-                robot.robotWait(2);
+                runningTime.reset();
+                while(runningTime.seconds() < 6) {
+                    robot.drive.scoreHexAutonomous();
+                    robot.drive.updateDistance();
+                }
+                robot.jaws.setHexLiftMiddle();
+                robot.robotWait(1);
                 robot.jaws.dispence();
                 robot.robotWait(2);
                 robot.jaws.zeroPos();
                 robot.robotWait(.25);
                 robot.jaws.autoSetHexZero();
-                robot.robotWait(3);
+                robot.robotWait(.5);
+                drive.followTrajectory(parkRight);
                 break;
             case MIDDLE:
-                drive.followTrajectory(middlePixel);
-                robot.jaws.setIntakePower(-.33);
+                drive.followTrajectorySequence(middlePixel);
+                runningTime.reset();
+                while(runningTime.seconds() < 6) {
+                    robot.drive.scoreHexAutonomous();
+                    robot.drive.updateDistance();
+                }
+                robot.drive.setMotorPowers(0, 0, 0, 0);
+
+                robot.jaws.setHexLiftMiddle();
                 robot.robotWait(1);
-                robot.jaws.setIntakePower(0);
-                drive.followTrajectory(moveMiddlePixel);
-                drive.followTrajectory(getReadyMiddle);
-                drive.followTrajectory(driveToOtherSideMiddle);
-                robot.jaws.setHexLiftHigh();
-                drive.followTrajectory(dropMiddlePixel);
-                robot.robotWait(2);
                 robot.jaws.dispence();
-                robot.robotWait(2);
+                robot.robotWait(1);
                 robot.jaws.zeroPos();
                 robot.robotWait(.25);
                 robot.jaws.autoSetHexZero();
-                robot.robotWait(3);
+                robot.robotWait(.5);
+                drive.followTrajectory(parkMiddle);
+
                 break;
             case LEFT:
-                drive.followTrajectory(leftPixel);
-                robot.jaws.setIntakePower(-.33);
+                drive.followTrajectorySequence(leftPixel);
+                runningTime.reset();
+                while(runningTime.seconds() < 6) {
+                    robot.drive.scoreHexAutonomous();
+                    robot.drive.updateDistance();
+                }
+                robot.jaws.setHexLiftMiddle();
                 robot.robotWait(1);
-                robot.jaws.setIntakePower(0);
-                drive.followTrajectory(moveLeftPixel);
-                drive.followTrajectory(getReadyLeft);
-                drive.followTrajectory(driveToOtherSideLeft);
-                robot.jaws.setHexLiftHigh();
-                drive.followTrajectory(dropLeftPixel);
-                robot.robotWait(2);
                 robot.jaws.dispence();
                 robot.robotWait(2);
                 robot.jaws.zeroPos();
                 robot.robotWait(.25);
                 robot.jaws.autoSetHexZero();
-                robot.robotWait(3);
+                robot.robotWait(.5);
+                drive.followTrajectory(parkLeft);
                 break;
         }
 
@@ -314,37 +326,42 @@ public class MainAutonomous extends LinearOpMode {
         CatMecanumDrive drive = robot.drive;
         drive.setPoseEstimate(startPose);
         Trajectory moveToMiddle = drive.trajectoryBuilder(new Pose2d())
-                .lineToConstantHeading(new Vector2d(24,-6))
+                .lineToConstantHeading(new Vector2d(24,-6),
+                        CatMecanumDrive.getVelocityConstraint(45, DriveConstants.MAX_ANG_VEL,DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(60))
                 .build();
         Trajectory middlePixel = drive.trajectoryBuilder(moveToMiddle.end())
-                .lineToConstantHeading(new Vector2d(31,-6))
+                .lineToConstantHeading(new Vector2d(30,-6))
                 .build();
         Trajectory leftPixel = drive.trajectoryBuilder(moveToMiddle.end())
-                .lineToLinearHeading(new Pose2d(28, -4,Math.toRadians(85)))
+
+                .lineToLinearHeading(new Pose2d(28, 0,Math.toRadians(90)),
+                        CatMecanumDrive.getVelocityConstraint(14, DriveConstants.MAX_ANG_VEL,DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL))
                 .build();
         Trajectory rightPixel = drive.trajectoryBuilder(new Pose2d())
-                .lineToLinearHeading(new Pose2d(24,-12,Math.toRadians(0)))
+                .lineToLinearHeading(new Pose2d(24,-14,Math.toRadians(0)))
                 .build();
         Trajectory moveMiddlePixel = drive.trajectoryBuilder(middlePixel.end())
                 .lineToConstantHeading(new Vector2d(25, -6))
                 .build();
         Trajectory dropLeftPixel = drive.trajectoryBuilder(leftPixel.end(),Math.toRadians(85))
-                .lineToLinearHeading(new Pose2d(41, -46,Math.toRadians(100)))
+                .lineToLinearHeading(new Pose2d(36, -35,Math.toRadians(100)))
                 .build();
         Trajectory dropMiddlePixel = drive.trajectoryBuilder(moveMiddlePixel.end())
-                .lineToLinearHeading(new Pose2d(44, -44,Math.toRadians(110)))
+                .lineToLinearHeading(new Pose2d(33, -35,Math.toRadians(110)))
                 .build();
         Trajectory dropRightPixel = drive.trajectoryBuilder(rightPixel.end())
-                .lineToLinearHeading(new Pose2d(46, -43,Math.toRadians(110)))
+                .lineToLinearHeading(new Pose2d(33, -35,Math.toRadians(110)))
                 .build();
         Trajectory leftPark = drive.trajectoryBuilder(dropLeftPixel.end(),Math.toRadians(100))
-                .lineToLinearHeading(new Pose2d(14, -45,Math.toRadians(80)))
+                .lineToLinearHeading(new Pose2d(14, -42,Math.toRadians(80)))
                 .build();
         Trajectory middlePark = drive.trajectoryBuilder(dropMiddlePixel.end(),Math.toRadians(110))
                 .lineToLinearHeading(new Pose2d(14, -45,Math.toRadians(80)))
                 .build();
         Trajectory leftParkFinal = drive.trajectoryBuilder(leftPark.end(),Math.toRadians(80))
-                .lineToLinearHeading(new Pose2d(8, -47,Math.toRadians(80)))
+                .lineToLinearHeading(new Pose2d(3, -49,Math.toRadians(85)))
                 .build();
         Trajectory middleParkFinal = drive.trajectoryBuilder(middlePark.end(),Math.toRadians(80))
                 .lineToLinearHeading(new Pose2d(8, -47,Math.toRadians(80)))
@@ -354,19 +371,28 @@ public class MainAutonomous extends LinearOpMode {
                 .build();
 
 
+
         switch(conePos) {
             case NONE:
             case RIGHT:
                 //drive.followTrajectory(moveToMiddle);
                 drive.followTrajectory(rightPixel);
-                robot.jaws.setIntakePower(-.25);
-                robot.robotWait(1);
+                robot.jaws.setIntakePower(-.4);
+                robot.robotWait(.25);
                 robot.jaws.setIntakePower(0);
                 //drive.followTrajectory(moveMiddlePixel);
-                robot.jaws.setHexLiftHigh();
+
                 drive.followTrajectory(dropRightPixel);
-                robot.robotWait(2);
-                robot.jaws.dispence();
+                runningTime.reset();
+                while(runningTime.seconds() < 3) {
+                    robot.drive.scoreHexAutonomous();
+                    robot.drive.updateDistance();
+                }
+                robot.drive.setMotorPowers(0, 0, 0, 0);
+
+                robot.jaws.setHexLiftMiddle();
+                robot.robotWait(1);
+                robot.jaws.dispenceAuto();
                 robot.robotWait(2);
                 robot.jaws.zeroPos();
                 robot.robotWait(1);
@@ -378,30 +404,46 @@ public class MainAutonomous extends LinearOpMode {
             case MIDDLE:
                 drive.followTrajectory(moveToMiddle);
                 drive.followTrajectory(middlePixel);
-                robot.jaws.setIntakePower(-.25);
-                robot.robotWait(1);
+                //robot.jaws.setIntakePower(-.35);
+                robot.robotWait(.5);
                 robot.jaws.setIntakePower(0);
                 drive.followTrajectory(moveMiddlePixel);
-                robot.jaws.setHexLiftHigh();
+
                 drive.followTrajectory(dropMiddlePixel);
-                robot.robotWait(2);
+                runningTime.reset();
+                while(runningTime.seconds() < 3) {
+                    robot.drive.scoreHexAutonomous();
+                    robot.drive.updateDistance();
+                }
+                robot.drive.setMotorPowers(0, 0, 0, 0);
+                robot.jaws.setHexLiftMiddle();
+                robot.robotWait(1);
                 robot.jaws.dispence();
-                robot.robotWait(2);
+                robot.robotWait(1);
                 robot.jaws.zeroPos();
-                robot.robotWait(1);
                 robot.jaws.autoSetHexZero();
-                robot.robotWait(1);
+                robot.robotWait(.5);
                 drive.followTrajectory(middlePark);
                 drive.followTrajectory(middleParkFinal);
                 break;
             case LEFT:
+                robot.jaws.hexLift.setTargetPosition(80);
+                robot.jaws.hexLift.setPower(1);
                 drive.followTrajectory(moveToMiddle);
                 drive.followTrajectory(leftPixel);
-                robot.jaws.setIntakePower(-.25);
+                //robot.jaws.setIntakePower(-.25);
                 robot.robotWait(1);
-                robot.jaws.setIntakePower(0);
-                robot.jaws.setHexLiftHigh();
+                //robot.jaws.setIntakePower(0);
+
                 drive.followTrajectory(dropLeftPixel);
+                runningTime.reset();
+                while(runningTime.seconds() < 3) {
+                    robot.drive.scoreHexAutonomous();
+                    robot.drive.updateDistance();
+                }
+                robot.drive.setMotorPowers(0, 0, 0, 0);
+
+                robot.jaws.setHexLiftMiddle();
                 robot.robotWait(2);
                 robot.jaws.dispence();
                 robot.robotWait(2);
@@ -421,92 +463,267 @@ public class MainAutonomous extends LinearOpMode {
         Pose2d startPose = new Pose2d(0, 0, Math.toRadians(0));
         CatMecanumDrive drive = robot.drive;
         drive.setPoseEstimate(startPose);
-        Trajectory leftPixel = drive.trajectoryBuilder(startPose)
-                .lineToConstantHeading(new Vector2d(18,5))
-                .build();
+        TrajectorySequence leftPixel = drive.trajectorySequenceBuilder(startPose)
+                .lineToConstantHeading(new Vector2d(23,5),
+                        CatMecanumDrive.getVelocityConstraint(DriveConstants.MAX_VEL, DriveConstants.MAX_ANG_VEL,DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(60))
+                .lineToConstantHeading(new Vector2d(19,10),
+                        CatMecanumDrive.getVelocityConstraint(DriveConstants.MAX_VEL, DriveConstants.MAX_ANG_VEL,DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(60))
+                .lineToLinearHeading(new Pose2d(30, 28,Math.toRadians(-120)),
+                        CatMecanumDrive.getVelocityConstraint(DriveConstants.MAX_VEL, DriveConstants.MAX_ANG_VEL,DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(60))
 
-        Trajectory middlePixel = drive.trajectoryBuilder(startPose)
+                .build();
+        Trajectory leftPark = drive.trajectoryBuilder(leftPixel.end(),Math.toRadians(-90))
+                .lineToLinearHeading(new Pose2d(12, 40,Math.toRadians(-90)),
+                        CatMecanumDrive.getVelocityConstraint(DriveConstants.MAX_VEL, DriveConstants.MAX_ANG_VEL,DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(60))
+
+
+                .build();
+        TrajectorySequence middlePixel = drive.trajectorySequenceBuilder(startPose)
+                .lineToConstantHeading(new Vector2d(28,-3))
                 .lineToConstantHeading(new Vector2d(22,-3))
+                .lineToLinearHeading(new Pose2d(35.5, 28,Math.toRadians(-120)))
+                .build();
+        Trajectory middlePark = drive.trajectoryBuilder(middlePixel.end(),Math.toRadians(-90))
+                .lineToLinearHeading(new Pose2d(12, 40,Math.toRadians(-90)),
+                        CatMecanumDrive.getVelocityConstraint(DriveConstants.MAX_VEL, DriveConstants.MAX_ANG_VEL,DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(60))
+
+
                 .build();
 
-        Trajectory rightPixel = drive.trajectoryBuilder(startPose)
-                .lineToLinearHeading(new Pose2d(34,2,Math.toRadians(-100)))
+        TrajectorySequence rightPixel = drive.trajectorySequenceBuilder(startPose)
+                .lineToConstantHeading(new Vector2d(28,0),
+                        CatMecanumDrive.getVelocityConstraint(DriveConstants.MAX_VEL, DriveConstants.MAX_ANG_VEL,DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(40))
+                .lineToLinearHeading(new Pose2d(30,-5,Math.toRadians(-100)),
+                        CatMecanumDrive.getVelocityConstraint(15, DriveConstants.MAX_ANG_VEL,DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(60))
+                .lineToLinearHeading(new Pose2d(30,-8,Math.toRadians(-100)),
+                        CatMecanumDrive.getVelocityConstraint(40, DriveConstants.MAX_ANG_VEL,DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(60))
+                .lineToLinearHeading(new Pose2d(33, 30,Math.toRadians(-100)),
+                        CatMecanumDrive.getVelocityConstraint(DriveConstants.MAX_VEL, DriveConstants.MAX_ANG_VEL,DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(60))
+
+                .build();
+        Trajectory rightPark = drive.trajectoryBuilder(rightPixel.end(),Math.toRadians(-90))
+                .lineToLinearHeading(new Pose2d(9, 35,Math.toRadians(-90)),
+                        CatMecanumDrive.getVelocityConstraint(DriveConstants.MAX_VEL, DriveConstants.MAX_ANG_VEL,DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(60))
+
+
                 .build();
 
-        Trajectory dropLeftPixel = drive.trajectoryBuilder(leftPixel.end())
-                .lineToLinearHeading(new Pose2d(32, 37,Math.toRadians(-100)))
-                .build();
-        Trajectory dropMiddlePixel = drive.trajectoryBuilder(middlePixel.end())
-                .lineToLinearHeading(new Pose2d(44, 37,Math.toRadians(-100)))
-                .build();
 
-        Trajectory dropRightPixel = drive.trajectoryBuilder(rightPixel.end(), Math.toRadians(-100))
-                .lineToLinearHeading(new Pose2d(54, 26,Math.toRadians(-120)))
-                .build();
 
-        Trajectory LeftPark = drive.trajectoryBuilder(dropLeftPixel.end(),Math.toRadians(-100))
-                .lineToLinearHeading(new Pose2d(15, 37,Math.toRadians(-100)))
-                .build();
-        Trajectory MiddlePark = drive.trajectoryBuilder(dropMiddlePixel.end(),Math.toRadians(-100))
-                .lineToLinearHeading(new Pose2d(15, 37,Math.toRadians(-100)))
-                .build();
-        Trajectory RightPark = drive.trajectoryBuilder(dropRightPixel.end(),Math.toRadians(-100))
-                .lineToLinearHeading(new Pose2d(15, 37,Math.toRadians(-100)))
-                .build();
 
         switch(conePos) {
             case NONE:
             case RIGHT:
-                drive.followTrajectory(rightPixel);
-                robot.jaws.setIntakePower(-.25);
+                drive.followTrajectorySequence(rightPixel);
+                runningTime.reset();
+                while(runningTime.seconds() < 3) {
+                    robot.drive.scoreHexAutonomous();
+                    robot.drive.updateDistance();
+                }
+                robot.drive.setMotorPowers(0, 0, 0, 0);
+                robot.jaws.setHexLiftMiddle();
                 robot.robotWait(1);
-                robot.jaws.setIntakePower(0);
-                drive.followTrajectory(dropRightPixel);
-                robot.jaws.setHexLiftHigh();
-                robot.robotWait(2);
                 robot.jaws.dispence();
-                robot.robotWait(2);
+                robot.robotWait(1);
                 robot.jaws.zeroPos();
                 robot.robotWait(1);
                 robot.jaws.autoSetHexZero();
-                robot.robotWait(1);
-                drive.followTrajectory(RightPark);
+                robot.robotWait(.5);
+                drive.followTrajectory(rightPark);
                 break;
             case MIDDLE:
-                drive.followTrajectory(middlePixel);
-                robot.jaws.setIntakePower(-.25);
+                drive.followTrajectorySequence(middlePixel);
+                runningTime.reset();
+                while(runningTime.seconds() < 3) {
+                    robot.drive.scoreHexAutonomous();
+                    robot.drive.updateDistance();
+                }
+                robot.drive.setMotorPowers(0, 0, 0, 0);
+                robot.jaws.setHexLiftMiddle();
                 robot.robotWait(1);
-                robot.jaws.setIntakePower(0);
-                drive.followTrajectory(dropMiddlePixel);
-                robot.jaws.setHexLiftHigh();
-                robot.robotWait(2);
                 robot.jaws.dispence();
-                robot.robotWait(2);
+                robot.robotWait(1);
                 robot.jaws.zeroPos();
                 robot.robotWait(1);
                 robot.jaws.autoSetHexZero();
-                robot.robotWait(1);
-                drive.followTrajectory(MiddlePark);
+                robot.robotWait(.5);
+                drive.followTrajectory(middlePark);
                 break;
             case LEFT:
-                drive.followTrajectory(leftPixel);
-                robot.jaws.setIntakePower(-.25);
+                drive.followTrajectorySequence(leftPixel);
+                runningTime.reset();
+                while(runningTime.seconds() < 3) {
+                    robot.drive.scoreHexAutonomous();
+                    robot.drive.updateDistance();
+                }
+                robot.drive.setMotorPowers(0, 0, 0, 0);
+                robot.jaws.setHexLiftMiddle();
                 robot.robotWait(1);
-                robot.jaws.setIntakePower(0);
-                drive.followTrajectory(dropLeftPixel);
-                robot.jaws.setHexLiftHigh();
-                robot.robotWait(2);
                 robot.jaws.dispence();
-                robot.robotWait(2);
+                robot.robotWait(1);
                 robot.jaws.zeroPos();
                 robot.robotWait(1);
                 robot.jaws.autoSetHexZero();
-                robot.robotWait(1);
-                drive.followTrajectory(LeftPark);
+                robot.robotWait(.5);
+                drive.followTrajectory(leftPark);
                 break;
 
 
         }
     }
+    public void blueRight() {
+        CatHW_Vision.UltimateGoalPipeline.conePosition conePos = robot.eyes.getConePos();
+
+        Pose2d startPose = new Pose2d(0, 0, Math.toRadians(0));
+        CatMecanumDrive drive = robot.drive;
+        TrajectorySequence leftPixel = drive.trajectorySequenceBuilder(startPose)
+                .lineToConstantHeading(new Vector2d(24, -6),
+                        CatMecanumDrive.getVelocityConstraint(DriveConstants.MAX_VEL, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(50))
+                .lineToLinearHeading(new Pose2d(30, 0, Math.toRadians(100)),
+                        CatMecanumDrive.getVelocityConstraint(25, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(60))
+                .lineToConstantHeading(new Vector2d(30, -10),
+                        CatMecanumDrive.getVelocityConstraint(50, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(60))
+                .lineToConstantHeading(new Vector2d(8, -10),
+                        CatMecanumDrive.getVelocityConstraint(60, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(60))
+                .lineToLinearHeading(new Pose2d(8, -5, Math.toRadians(80)),
+                        CatMecanumDrive.getVelocityConstraint(60, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(60))
+                .lineToLinearHeading(new Pose2d(19, 60, Math.toRadians(65)),
+                        CatMecanumDrive.getVelocityConstraint(30, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(60))
+                .lineToLinearHeading(new Pose2d(46, 80, Math.toRadians(240)),
+                        CatMecanumDrive.getVelocityConstraint(60, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(60))
+
+                .build();
+
+        Trajectory leftPark = drive.trajectoryBuilder(leftPixel.end(), -90)
+                .lineToLinearHeading(new Pose2d(25, 80, Math.toRadians(-90)),
+                        CatMecanumDrive.getVelocityConstraint(DriveConstants.MAX_VEL, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL))
+                .build();
+
+        TrajectorySequence middlePixel = drive.trajectorySequenceBuilder(startPose)
+                .lineToConstantHeading(new Vector2d(29, -6),
+                        CatMecanumDrive.getVelocityConstraint(DriveConstants.MAX_VEL, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(60))
+                .lineToLinearHeading(new Pose2d(4, -6, Math.toRadians(90)),
+                        CatMecanumDrive.getVelocityConstraint(50, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(60))
+                .lineToLinearHeading(new Pose2d(4, 5, Math.toRadians(80)),
+                        CatMecanumDrive.getVelocityConstraint(60, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(60))
+                .lineToLinearHeading(new Pose2d(19, 60, Math.toRadians(65)),
+                        CatMecanumDrive.getVelocityConstraint(30, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(60))
+                .lineToLinearHeading(new Pose2d(42, 78, Math.toRadians(250)),
+                        CatMecanumDrive.getVelocityConstraint(60, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(60))
+
+                .build();
+        Trajectory middlePark = drive.trajectoryBuilder(middlePixel.end(), -90)
+                .lineToLinearHeading(new Pose2d(25, 80, Math.toRadians(-90)),
+                        CatMecanumDrive.getVelocityConstraint(DriveConstants.MAX_VEL, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL))
+                .build();
+
+        TrajectorySequence rightPixel = drive.trajectorySequenceBuilder(startPose)
+                .lineToConstantHeading(new Vector2d(27, -15),
+                        CatMecanumDrive.getVelocityConstraint(DriveConstants.MAX_VEL, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(60))
+                .lineToLinearHeading(new Pose2d(4, -6, Math.toRadians(90)),
+                        CatMecanumDrive.getVelocityConstraint(50, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(60))
+                .lineToLinearHeading(new Pose2d(4, 5, Math.toRadians(90)),
+                        CatMecanumDrive.getVelocityConstraint(60, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(60))
+                .lineToLinearHeading(new Pose2d(13, 60, Math.toRadians(75)),
+                        CatMecanumDrive.getVelocityConstraint(30, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(60))
+                .lineToLinearHeading(new Pose2d(39, 78, Math.toRadians(-90)),
+                        CatMecanumDrive.getVelocityConstraint(60, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(60))
+
+                .build();
+        Trajectory rightPark = drive.trajectoryBuilder(rightPixel.end(), -90)
+                .lineToLinearHeading(new Pose2d(9, 85, Math.toRadians(-90)),
+                        CatMecanumDrive.getVelocityConstraint(DriveConstants.MAX_VEL, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                        CatMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL))
+                .build();
+
+
+        switch (conePos) {
+            case NONE:
+            case RIGHT:
+                drive.followTrajectorySequence(rightPixel);
+                runningTime.reset();
+                while (runningTime.seconds() < 5) {
+                    robot.drive.scoreHexAutonomous();
+                    robot.drive.updateDistance();
+                }
+                robot.drive.setMotorPowers(0, 0, 0, 0);
+                robot.jaws.setHexLiftMiddle();
+                robot.robotWait(1);
+                robot.jaws.dispence();
+                robot.robotWait(1);
+                robot.jaws.zeroPos();
+                robot.robotWait(1);
+                robot.jaws.autoSetHexZero();
+                robot.robotWait(.5);
+                drive.followTrajectory(rightPark);
+                break;
+            case MIDDLE:
+                drive.followTrajectorySequence(middlePixel);
+                runningTime.reset();
+                while (runningTime.seconds() < 6) {
+                    robot.drive.scoreHexAutonomous();
+                    robot.drive.updateDistance();
+                }
+                robot.drive.setMotorPowers(0, 0, 0, 0);
+                robot.jaws.setHexLiftMiddle();
+                robot.robotWait(1);
+                robot.jaws.dispence();
+                robot.robotWait(1);
+                robot.jaws.zeroPos();
+                robot.robotWait(1);
+                robot.jaws.autoSetHexZero();
+                robot.robotWait(.5);
+                drive.followTrajectory(middlePark);
+                break;
+            case LEFT:
+                drive.followTrajectorySequence(leftPixel);
+                runningTime.reset();
+                while (runningTime.seconds() < 6) {
+                    robot.drive.scoreHexAutonomous();
+                    robot.drive.updateDistance();
+                }
+                robot.drive.setMotorPowers(0, 0, 0, 0);
+                robot.jaws.setHexLiftMiddle();
+                robot.robotWait(1);
+                robot.jaws.dispence();
+                robot.robotWait(1);
+                robot.jaws.zeroPos();
+                robot.robotWait(1);
+                robot.jaws.autoSetHexZero();
+                robot.robotWait(.25);
+                drive.followTrajectory(leftPark);
+                break;
+        }
+    }
 
 }
+
