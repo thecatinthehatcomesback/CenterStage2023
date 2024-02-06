@@ -175,16 +175,17 @@ public class MainAutonomous extends LinearOpMode {
          * DO STUFF FOR the OPMODE!!!
          */
 
-
-        /*if(robot.isLeftAlliance && !robot.isRedAlliance){
+        robot.robotWait(timeDelay);
+        if(robot.isLeftAlliance && !robot.isRedAlliance){
             blueLeft();
 
         }else if(!robot.isLeftAlliance && robot.isRedAlliance){
             redRight();
         }else if(robot.isLeftAlliance && robot.isRedAlliance){
             redLeft();
-        }*/
-        redLeft();
+        } else if (!robot.isLeftAlliance && !robot.isRedAlliance) {
+            blueRight();
+        }
 
 
         if(isStopRequested()) return;
@@ -205,7 +206,7 @@ public class MainAutonomous extends LinearOpMode {
                 .lineToLinearHeading(new Pose2d(5, -65,Math.toRadians(-80)),
                         CatMecanumDrive.getVelocityConstraint(30, DriveConstants.MAX_ANG_VEL,DriveConstants.TRACK_WIDTH),
                         CatMecanumDrive.getAccelerationConstraint(60))
-                .lineToLinearHeading(new Pose2d(42, -75,Math.toRadians(99)),
+                .lineToLinearHeading(new Pose2d(44, -75,Math.toRadians(99)),
                         CatMecanumDrive.getVelocityConstraint(60, DriveConstants.MAX_ANG_VEL,DriveConstants.TRACK_WIDTH),
                         CatMecanumDrive.getAccelerationConstraint(60))
                 .build();
@@ -242,7 +243,7 @@ public class MainAutonomous extends LinearOpMode {
                         CatMecanumDrive.getAccelerationConstraint(60))
                 .build();
         Trajectory parkLeft = drive.trajectoryBuilder(leftPixel.end(),Math.toRadians(90))
-                .lineToLinearHeading(new Pose2d(15,-95,Math.toRadians(90)))
+                .lineToLinearHeading(new Pose2d(15,-85,Math.toRadians(90)))
                 .build();
 
 
@@ -254,6 +255,7 @@ public class MainAutonomous extends LinearOpMode {
                 .build();
 
 
+        robot.jaws.rotateIntake();
 
         switch(conePos) {
             case NONE:
@@ -372,6 +374,7 @@ public class MainAutonomous extends LinearOpMode {
 
 
 
+        robot.jaws.rotateIntake();
         switch(conePos) {
             case NONE:
             case RIGHT:
@@ -520,6 +523,7 @@ public class MainAutonomous extends LinearOpMode {
 
 
 
+        robot.jaws.rotateIntake();
 
         switch(conePos) {
             case NONE:
@@ -630,7 +634,7 @@ public class MainAutonomous extends LinearOpMode {
                 .lineToLinearHeading(new Pose2d(19, 60, Math.toRadians(65)),
                         CatMecanumDrive.getVelocityConstraint(30, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
                         CatMecanumDrive.getAccelerationConstraint(60))
-                .lineToLinearHeading(new Pose2d(42, 78, Math.toRadians(250)),
+                .lineToLinearHeading(new Pose2d(49, 75, Math.toRadians(250)),
                         CatMecanumDrive.getVelocityConstraint(60, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
                         CatMecanumDrive.getAccelerationConstraint(60))
 
@@ -654,7 +658,7 @@ public class MainAutonomous extends LinearOpMode {
                 .lineToLinearHeading(new Pose2d(13, 60, Math.toRadians(75)),
                         CatMecanumDrive.getVelocityConstraint(30, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
                         CatMecanumDrive.getAccelerationConstraint(60))
-                .lineToLinearHeading(new Pose2d(39, 78, Math.toRadians(-90)),
+                .lineToLinearHeading(new Pose2d(41, 78, Math.toRadians(-90)),
                         CatMecanumDrive.getVelocityConstraint(60, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
                         CatMecanumDrive.getAccelerationConstraint(60))
 
@@ -665,6 +669,7 @@ public class MainAutonomous extends LinearOpMode {
                         CatMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL))
                 .build();
 
+        robot.jaws.rotateIntake();
 
         switch (conePos) {
             case NONE:

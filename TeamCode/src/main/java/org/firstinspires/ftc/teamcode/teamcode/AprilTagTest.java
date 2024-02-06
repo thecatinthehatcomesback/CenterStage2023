@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.teamcode;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -8,10 +10,12 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+import org.openftc.easyopencv.OpenCvCamera;
 
 import java.util.List;
 
 @TeleOp(name = "Concept: AprilTag", group = "Concept")
+@Disabled
 public class AprilTagTest extends LinearOpMode{
     private static final boolean USE_WEBCAM = true;  // true for webcam, false for phone camera
 
@@ -99,7 +103,6 @@ public class AprilTagTest extends LinearOpMode{
 
         // Enable the RC preview (LiveView).  Set "false" to omit camera monitoring.
         //builder.enableCameraMonitoring(true);
-
         // Set the stream format; MJPEG uses less bandwidth than default YUY2.
         //builder.setStreamFormat(VisionPortal.StreamFormat.YUY2);
 

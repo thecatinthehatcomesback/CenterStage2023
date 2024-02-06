@@ -124,18 +124,22 @@ public class MainTeleOp extends LinearOpMode
             if (gamepad1.right_trigger > .1 || gamepad1.left_trigger > .1) {
                 driveSpeed = 1.00;
             } else if (gamepad1.right_bumper || gamepad1.left_bumper) {
-                driveSpeed = 0.30;
+                driveSpeed = 0.50;
             } else {
                 driveSpeed = 0.9;
             }
 
             double forward = -((Math.abs(gamepad1.right_stick_y) < 0.05) ? 0 : gamepad1.right_stick_y);
-            forward = forward - (gamepad1.left_bumper? 1.0 : 0) * 0.3 + (gamepad1.right_bumper? 1.0:0) *.3;
+            //forward = forward - (gamepad1.left_bumper? 1.0 : 0) * 0.3 + (gamepad1.right_bumper? 1.0:0) *.3;
             double strafe = ((Math.abs(gamepad1.right_stick_x) < 0.05) ? 0 : gamepad1.right_stick_x);
             if(gamepad1.dpad_left){
                 strafe = strafe - 0.5;
             }else if(gamepad1.dpad_right){
                 strafe = strafe + 0.5;
+            }else if(gamepad1.dpad_up){
+                forward = forward + .4;
+            } else if (gamepad1.dpad_down) {
+                forward = forward - 0.4;
             }
             double turn = gamepad1.left_stick_x;
 

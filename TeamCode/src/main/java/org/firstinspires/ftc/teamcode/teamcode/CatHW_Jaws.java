@@ -51,15 +51,7 @@ public class CatHW_Jaws extends CatHW_Subsystem
 
     public Update_PID ourThread;
 
-    private enum TiltMode{
-        ARMBACK,
-        ARMFRONT,
-        ARMFRONTMEDIUM,
-        ARMFRONTLOW,
-        MANUEL,
-        IDLE
-    };
-    private TiltMode tiltMode = TiltMode.IDLE;
+
     // Timers: //
 
     /* Constructor */
@@ -138,6 +130,23 @@ public class CatHW_Jaws extends CatHW_Subsystem
         intake.setPower(power);
 
     }
+    public void rotateIntake(){
+        intake.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        intake.setTargetPosition(-40);
+        intake.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        intake.setPower(0.15);
+        ElapsedTime timeout =new ElapsedTime();
+        timeout.reset();
+        while(intake.isBusy()){
+            if(timeout.seconds() > 1.0){
+                break;
+            }
+            mainHW.robotWait(0.01);
+        }
+        intake.setPower(0);
+        intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+    }
 
 
 
@@ -153,7 +162,6 @@ public class CatHW_Jaws extends CatHW_Subsystem
     public void bumpArm(int bumpAmount) {
         tilt.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER );
         tilt.setTargetPosition(bumpAmount + tilt.getTargetPosition());
-        tiltMode = TiltMode.MANUEL;
 
     }
     public void bumpHexHeight(int bumpAmount) {
@@ -241,22 +249,7 @@ public class CatHW_Jaws extends CatHW_Subsystem
             }
         }else*/
         //if(tiltMode == TiltMode.ARMFRONTLOW || tiltMode == TiltMode.ARMFRONTMEDIUM|| tiltMode == TiltMode.MANUEL){
-        if(tiltMode!= TiltMode.IDLE){
-            double Kp = 0.03;
-            double Kd = 0.0015;
-            double curTime = pidTimer.seconds();
-            double error = tilt.getTargetPosition() - tilt.getCurrentPosition();
-            double derivative = (error - lastError)/(curTime - lastTime);
-            double theta = tilt.getCurrentPosition() * 1.33; //this is in degrees
-            theta *= 3.14/180.0;
-            double gravityAdjustment = Math.sin(theta) * 0.15;
-
-            lastTime = curTime;
-            lastError = error;
-            tilt.setPower(Kp * error + Kd * derivative + gravityAdjustment);
-            Log.d("catbot",String.format("pow: %.3f error: %.1f der: %.2f",
-                    Kp * error + Kd * derivative + gravityAdjustment,error,derivative));
-        }
+        
     }
 
     //----------------------------------------------------------------------------------------------
