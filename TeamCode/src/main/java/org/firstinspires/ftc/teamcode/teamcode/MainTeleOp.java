@@ -102,9 +102,19 @@ public class MainTeleOp extends LinearOpMode
         buttontime.reset();
 
 
+        double lastTime = elapsedGameTime.milliseconds();
+        double avgLoopTime = 0;
+        double avgT1 = 0;
+        double avgT2 = 0;
+        double avgT3 = 0;
 
         // Run infinitely until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
+            // Measure loop time
+            double currentTime = elapsedGameTime.milliseconds();
+            double loopTime = currentTime - lastTime;
+            lastTime = currentTime;
+            avgLoopTime = loopTime * 0.1 + avgLoopTime * 0.9;
 
             //--------------------------------------------------------------------------------------
             // Driver 1 Controls:
@@ -158,6 +168,9 @@ public class MainTeleOp extends LinearOpMode
             leftBack = leftBack * SF * driveSpeed;
             rightBack = rightBack * SF * driveSpeed;
 
+            currentTime = elapsedGameTime.milliseconds();
+            avgT1 = avgT1 * 0.9 + (currentTime - lastTime) * 0.1;
+
             if(gamepad1.a){
                 alignMode = true;
             }
@@ -174,7 +187,8 @@ public class MainTeleOp extends LinearOpMode
                 robot.drive.setMotorPowers(leftFront, leftBack, rightBack, rightFront);
 
             }
-
+            currentTime = elapsedGameTime.milliseconds();
+            avgT2 = avgT2 * 0.9 + (currentTime - lastTime) * 0.1;
 
 
             /*if (gamepad1.x) {
@@ -243,6 +257,8 @@ public class MainTeleOp extends LinearOpMode
             }else{
                 robot.jaws.droneSet();
             }
+            currentTime = elapsedGameTime.milliseconds();
+            avgT3 = avgT3 * 0.9 + (currentTime - lastTime) * 0.1;
 
             //--------------------------------------------------------------------------------------
             // Telemetry Data:
@@ -255,7 +271,7 @@ public class MainTeleOp extends LinearOpMode
             telemetry.addData("Lift", "%.2f power",(float)robot.jaws.liftHook.getPower());
             telemetry.addData("Hex Lift","cur: %d Tar: %d pow: %.1f",robot.jaws.hexLift.getCurrentPosition(), robot.jaws.hexLift.getTargetPosition(), robot.jaws.hexLift.getPower());
             telemetry.addData("Distance","L: %.2f R: %.2f", robot.drive.leftInches, robot.drive.rightInches);
-
+            telemetry.addData("Loop Time", "%3.0f ms  %3.0f/%3.0f/%3.0f",avgLoopTime,avgT1,avgT2,avgT3);
 
             telemetry.update();
             dashboardTelemetry.update();
