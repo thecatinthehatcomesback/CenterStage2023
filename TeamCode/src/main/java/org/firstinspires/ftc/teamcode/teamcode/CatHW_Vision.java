@@ -261,7 +261,7 @@ public class CatHW_Vision extends CatHW_Subsystem
         webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
             @Override
             public void onOpened() {
-                webcam.startStreaming(640, 360, OpenCvCameraRotation.UPRIGHT);
+                webcam.startStreaming(1024, 768, OpenCvCameraRotation.UPRIGHT);
                 FtcDashboard.getInstance().startCameraStream(webcam, 10);
             }
 

@@ -132,7 +132,7 @@ public class CatHW_Jaws extends CatHW_Subsystem
     }
     public void rotateIntake(){
         intake.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        intake.setTargetPosition(-40);
+        intake.setTargetPosition(-60);
         intake.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         intake.setPower(0.15);
         ElapsedTime timeout =new ElapsedTime();

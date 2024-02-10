@@ -232,6 +232,12 @@ public class MainTeleOp extends LinearOpMode
                 robot.jaws.setRobotLift(0,0);
             }
 
+            if(-gamepad2.left_stick_y > .1){
+                robot.jaws.bumpHexHeight(30);
+            } else if (-gamepad2.left_stick_y < -0.1) {
+                robot.jaws.bumpHexHeight(-30);
+            }
+
             if(gamepad2.a && endGame){
                 robot.jaws.launchDrone();
             }else{
